@@ -1,0 +1,779 @@
+openapi: 3.0.0
+info:
+  title: Code Platform API
+  description: API for managing users, problems, contests, discussions, and submissions.
+  version: 1.0.0
+
+paths:
+  /signup:
+    post:
+      tags:
+        - Authentication
+      summary: Signup a new user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupPayload"
+      responses:
+        "200":
+          description: Successful signup
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/okResp"
+
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Login an existing user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginPayload"
+      responses:
+        "200":
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/okResp"
+
+  /profile/{username}:
+    get:
+      tags:
+        - User
+      summary: Get user profile by username
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /problems:
+    get:
+      tags:
+        - Problems
+      summary: Get all problems
+      responses:
+        "200":
+          description: List of all problems
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProblemInfo"
+    post:
+      tags:
+        - Problems
+      summary: Create a new problem
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProblemDetail"
+      responses:
+        "200":
+          description: Problem created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/idResp"
+
+  /problem/{slug}:
+    get:
+      tags:
+        - Problems
+      summary: Get a specific problem by its slug
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Problem details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+
+  /problems/{id}:
+    put:
+      tags:
+        - Problems
+      summary: Update an existing problem
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProblemDetail"
+      responses:
+        "200":
+          description: Problem updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/okResp"
+
+  /run:
+    post:
+      tags:
+        - Code Execution
+      summary: Run code for a problem
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunCodePayload"
+      responses:
+        "200":
+          description: Code run result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/idResp"
+
+  /submit:
+    post:
+      tags:
+        - Submissions
+      summary: Submit code for a problem
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionPayload"
+      responses:
+        "200":
+          description: Successful code submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/idResp"
+
+  /submissions/{problemID}:
+    get:
+      tags:
+        - Submissions
+      summary: Get submissions for a problem
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: problemID
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of submissions for the problem
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Submission"
+
+  /submission/{runID}:
+    get:
+      tags:
+        - Submissions
+      summary: Get submission result by run ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: runID
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Submission result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+
+  /contests:
+    get:
+      tags:
+        - Contests
+      summary: Get all contests
+      responses:
+        "200":
+          description: List of contests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contest"
+    post:
+      tags:
+        - Contests
+      summary: Create a new contest
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Contest"
+      responses:
+        "200":
+          description: Contest created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/idResp"
+
+  /contest/{id}:
+    get:
+      tags:
+        - Contests
+      summary: Get contest by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Contest details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contest"
+    put:
+      tags:
+        - Contests
+      summary: Update an existing contest
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Contest"
+      responses:
+        "200":
+          description: Contest updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/okResp"
+
+  /contest/{id}/leaderboard:
+    get:
+      tags:
+        - Contests
+      summary: Get leaderboard for a contest
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Contest leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContestParticipant"
+
+  /discussion/{id}:
+    get:
+      tags:
+        - Discussions
+      summary: Get discussion by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Discussion details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Discussion"
+
+  /discussion:
+    post:
+      tags:
+        - Discussions
+      summary: Create a new discussion
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Discussion"
+      responses:
+        "200":
+          description: Discussion created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/idResp"
+    put:
+      tags:
+        - Discussions
+      summary: Update an existing discussion
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Discussion"
+      responses:
+        "200":
+          description: Discussion updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/okResp"
+
+  /discussion/vote:
+    post:
+      tags:
+        - Discussions
+      summary: Add vote to a discussion
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddVotePayload"
+      responses:
+        "200":
+          description: Vote added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/okResp"
+
+  /contest/{id}/start:
+    post:
+      tags:
+        - Contests
+      summary: Start a contest
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Contest started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/okResp"
+
+  /contest/{id}/end:
+    post:
+      tags:
+        - Contests
+      summary: End a contest
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Contest ended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/okResp"
+
+  /contest/{id}/join:
+    post:
+      tags:
+        - Contests
+      summary: Join a contest
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Contest joined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/okResp"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserRole:
+      type: string
+      enum:
+        - admin
+        - user
+    ProblemStatus:
+      type: string
+      enum:
+        - active
+        - inactive
+    SubmissionStatus:
+      type: string
+      enum:
+        - pending
+        - accepted
+        - rejected
+    ContestStatus:
+      type: string
+      enum:
+        - upcoming
+        - ongoing
+        - finished
+    Language:
+      type: string
+      enum:
+        - python
+        - cpp
+        - java
+        - javascript
+    Difficulty:
+      type: string
+      enum:
+        - easy
+        - medium
+        - hard
+    # ExecutionType:
+    #   type: string
+    #   enum:
+    #     - test
+    #     - run
+    Vote:
+      type: integer
+      enum:
+        - 1
+        - -1
+    User:
+      type: object
+      properties:
+        ID:
+          type: integer
+        Username:
+          type: string
+        HashedPassword:
+          type: string
+        Email:
+          type: string
+        Role:
+          $ref: "#/components/schemas/UserRole"
+        Rating:
+          type: integer
+        SolvedProblems:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProblemInfo"
+    ProblemInfo:
+      type: object
+      properties:
+        ID:
+          type: integer
+        Title:
+          type: string
+        Tags:
+          type: array
+          items:
+            type: string
+        Difficulty:
+          $ref: "#/components/schemas/Difficulty"
+    ProblemDetail:
+      type: object
+      properties:
+        ID:
+          type: integer
+        Title:
+          type: string
+        Description:
+          type: string
+        Constraints:
+          type: array
+          items:
+            type: string
+        Slug:
+          type: string
+        Tags:
+          type: array
+          items:
+            type: string
+        Difficulty:
+          $ref: "#/components/schemas/Difficulty"
+        AuthorID:
+          type: integer
+        Status:
+          $ref: "#/components/schemas/ProblemStatus"
+        SolutionLanguage:
+          $ref: "#/components/schemas/Language"
+        SolutionCode:
+          type: string
+        TestCases:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestCase"
+        Limits:
+          type: array
+          items:
+            $ref: "#/components/schemas/Limits"
+        FailureReason:
+          type: string
+    Submission:
+      type: object
+      properties:
+        ID:
+          type: integer
+        ProblemID:
+          type: integer
+        UserID:
+          type: integer
+        ContestID:
+          type: integer
+        Language:
+          $ref: "#/components/schemas/Language"
+        Code:
+          type: string
+        Status:
+          type: string
+        Message:
+          type: string
+        Results:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestResult"
+    TestResult:
+      type: object
+      properties:
+        ID:
+          type: integer
+        Status:
+          $ref: "#/components/schemas/SubmissionStatus"
+        Input:
+          type: string
+        Output:
+          type: string
+        ExpectedOutput:
+          type: string
+        RuntimeMS:
+          type: integer
+        MemoryKB:
+          type: integer
+    ContestParticipant:
+      type: object
+      properties:
+        UserID:
+          type: integer
+        Username:
+          type: string
+        Score:
+          type: integer
+        ProblemsSolved:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContestProblem"
+        RatingChange:
+          type: integer
+    ContestProblem:
+      type: object
+      properties:
+        ProblemInfo:
+          $ref: "#/components/schemas/ProblemInfo"
+        MaxPoints:
+          type: integer
+    Contest:
+      type: object
+      properties:
+        ID:
+          type: integer
+        Name:
+          type: string
+        Status:
+          $ref: "#/components/schemas/ContestStatus"
+        StartTime:
+          type: string
+          format: date-time
+        EndTime:
+          type: string
+          format: date-time
+        Problems:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContestProblem"
+        Leaderboard:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContestParticipant"
+    Discussion:
+      type: object
+      properties:
+        ID:
+          type: integer
+        Title:
+          type: string
+        Content:
+          type: string
+        Tags:
+          type: array
+          items:
+            type: string
+        AuthorID:
+          type: integer
+        IsActive:
+          type: boolean
+        Votes:
+          type: integer
+        Comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiscussionComment"
+    DiscussionComment:
+      type: object
+      properties:
+        ID:
+          type: integer
+        Content:
+          type: string
+        AuthorID:
+          type: integer
+    AddVotePayload:
+      type: object
+      properties:
+        DiscussionID:
+          type: integer
+        Vote:
+          $ref: "#/components/schemas/Vote"
+    SignupPayload:
+      type: object
+      properties:
+        Username:
+          type: string
+        Email:
+          type: string
+        Password:
+          type: string
+    LoginPayload:
+      type: object
+      properties:
+        Username:
+          type: string
+        Password:
+          type: string
+    RunCodePayload:
+      type: object
+      properties:
+        ProblemID:
+          type: integer
+        Language:
+          $ref: "#/components/schemas/Language"
+        Code:
+          type: string
+        Cases:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestCase"
+    SubmissionPayload:
+      type: object
+      properties:
+        ProblemID:
+          type: integer
+        Language:
+          $ref: "#/components/schemas/Language"
+        Code:
+          type: string
+    okResp:
+      type: object
+      properties:
+        message:
+          type: string
+    idResp:
+      type: object
+      properties:
+        id:
+          type: integer
+
+    TestCase:
+      type: object
+      properties:
+        ID:
+          type: integer
+        Input:
+          type: string
+        ExpectedOutput:
+          type: string
+
+    Limits:
+      type: object
+      properties:
+        ProblemID:
+          type: integer
+        Language:
+          $ref: "#/components/schemas/Language" # Reference to the Language enum
+        TimeLimitMS:
+          type: integer
+        MemoryLimitKB:
+          type: integer

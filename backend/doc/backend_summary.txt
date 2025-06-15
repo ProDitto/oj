@@ -1,0 +1,64 @@
+/signup: Body: SignupPayload; Response: okResp
+/login: Body: LoginPayload; Response: okResp
+
+/profile/{username}: Params: username (string); Response: User
+
+/problems: Method GET; Response: List[ProblemInfo]
+/problems: Method POST, Auth: bearerAuth; Body: ProblemDetail; Response: idResp
+/problem/{slug}: Params: slug (string); Response: ProblemDetail
+/problems/{id}: Method PUT, Auth: bearerAuth; Params: id (int); Body: ProblemDetail; Response: okResp
+
+/submit: Method POST, Auth: bearerAuth; Body: SubmissionPayload; Response: idResp
+/submissions/{problemID}: Method GET, Auth: bearerAuth; Params: problemID (int); Response: List[Submission]
+/submission/{runID}: Method GET, Auth: bearerAuth; Params: runID (int); Response: Submission
+
+/run: Method POST, Auth: bearerAuth; Body: RunCodePayload; Response: idResp
+
+/contests: Method GET; Response: List[Contest]
+/contests: Method POST, Auth: bearerAuth; Body: Contest; Response: idResp
+/contest/{id}: Params: id (int); Response: Contest
+/contest/{id}: Method PUT, Auth: bearerAuth; Params: id (int); Body: Contest; Response: okResp
+/contest/{id}/leaderboard: Params: id (int); Response: List[ContestParticipant]
+/contest/{id}/start: Method POST, Auth: bearerAuth; Params: id (int); Response: okResp
+/contest/{id}/end: Method POST, Auth: bearerAuth; Params: id (int); Response: okResp
+/contest/{id}/join: Method POST, Auth: bearerAuth; Params: id (int); Response: okResp
+
+/discussion/{id}: Params: id (int); Response: Discussion
+/discussion: Method POST, Auth: bearerAuth; Body: Discussion; Response: idResp
+/discussion: Method PUT, Auth: bearerAuth; Body: Discussion; Response: okResp
+/discussion/vote: Method POST, Auth: bearerAuth; Body: AddVotePayload; Response: okResp
+
+Security: bearerAuth required for all POST, PUT methods except /signup, /login, /problems, /contests, /contest/{id}, and /discussion/{id}.
+
+---
+
+Schemas:
+
+* UserRole: admin, user
+* ProblemStatus: active, inactive
+* SubmissionStatus: pending, accepted, rejected
+* ContestStatus: upcoming, ongoing, finished
+* Language: python, cpp, java, javascript
+* Difficulty: easy, medium, hard
+* Vote: 1, -1
+* User: ID (int), Username (string), HashedPassword (string), Email (string), Role (UserRole), Rating (int), SolvedProblems (List[ProblemInfo])
+* ProblemInfo: ID (int), Title (string), Tags (List[string]), Difficulty (Difficulty)
+* ProblemDetail: ID (int), Title (string), Description (string), Constraints (List[string]), Slug (string), Tags (List[string]), Difficulty (Difficulty), AuthorID (int), Status (ProblemStatus), SolutionLanguage (Language), SolutionCode (string), TestCases (List[TestCase]), Limits (List[Limits]), FailureReason (string)
+* Submission: ID (int), ProblemID (int), UserID (int), ContestID (int), Language (Language), Code (string), Status (string), Message (string), Results (List[TestResult])
+* TestResult: ID (int), Status (SubmissionStatus), Input (string), ExpectedOutput (string), Output (string), RuntimeMS (int), MemoryKB (int)
+* ContestParticipant: UserID (int), Username (string), Score (int), ProblemsSolved (List[ContestProblem]), RatingChange (int)
+* ContestProblem: ProblemInfo (ProblemInfo), MaxPoints (int)
+* Contest: ID (int), Name (string), Status (ContestStatus), StartTime (string, date-time), EndTime (string, date-time), Problems (List[ContestProblem]), Leaderboard (List[ContestParticipant])
+* Discussion: ID (int), Title (string), Content (string), Tags (List[string]), AuthorID (int), IsActive (bool), Votes (int), Comments (List[DiscussionComment])
+* DiscussionComment: ID (int), Content (string), AuthorID (int)
+* AddVotePayload: DiscussionID (int), Vote (Vote)
+* SignupPayload: Username (string), Email (string), Password (string)
+* LoginPayload: Username (string), Password (string)
+* RunCodePayload: ProblemID (int), Language (Language), Code (string), Cases (List[TestCase])
+* SubmissionPayload: ProblemID (int), Language (Language), Code (string)
+* okResp: message (string)
+* idResp: id (int)
+* TestCase: ID (int), Input (string), ExpectedOutput (string)
+* Limits: ProblemID (int), Language (Language), TimeLimitMS (int), MemoryLimitKB (int)
+ 
+---

@@ -1,0 +1,51 @@
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  online_judge_backend:
+    build:
+      context: ./backend
+    container_name: online_judge_backend
+    restart: always
+    environment:
+      SERVER_PORT: ":8080"
+      DB_URI: "postgresql://postgres:postgres@online_judge_db:5432/postgres?sslmode=disable"
+      MAX_IDLE_CONNS: 20
+      MAX_OPEN_CONNS: 10
+      ENVIRONMENT: PRODUCTION
+    ports:
+      - "8080:8080"
+
+  online_judge_frontend:
+    build:
+      context: ./frontend
+      # dockerfile: Dockerfile
+    container_name: frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - online_judge_backend
+    environment:
+      VITE_BACKEND_URL: "https://online_judge_backend:8080/api/v1"
+
+  # online_judge_db:
+  db:
+    container_name: online_judge_db
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

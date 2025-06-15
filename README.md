@@ -1,1 +1,1 @@
-# oj
+# oj-project

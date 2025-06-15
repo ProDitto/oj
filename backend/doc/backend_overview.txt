@@ -1,0 +1,244 @@
+type UserRole string
+type ProblemStatus string
+type SubmissionStatus string
+type ContestStatus string
+type Language string
+type Difficulty string
+type ExecutionType string
+type Vote int
+
+type User struct {
+ID             int
+Username       string
+HashedPassword string
+Email          string
+Role           UserRole
+Rating         int
+SolvedProblems []ProblemInfo
+}
+
+type ProblemInfo struct {
+ID         int
+Title      string
+Tags       []string
+Difficulty Difficulty
+}
+
+type ProblemExample struct {
+ID             int
+Input          string
+ExpectedOutput string
+Explanation    string
+}
+
+type TestCase struct {
+ID             int
+Input          string
+ExpectedOutput string
+}
+
+type Limits struct {
+ProblemID     int
+Language      Language
+TimeLimitMS   int
+MemoryLimitKB int
+}
+
+type ProblemDetail struct {
+ID               int
+Title            string
+Description      string
+Constraints      []string
+Slug             string
+Tags             []string
+Difficulty       Difficulty
+AuthorID         int
+Status           ProblemStatus
+SolutionLanguage Language
+SolutionCode     string
+TestCases        []TestCase
+Limits           []Limits
+FailureReason    string // in case failed to validate
+}
+
+type Submission struct {
+ID        int
+ProblemID *int
+UserID    int
+ContestID *int
+Language  Language
+Code      string
+Status    string
+Message   string
+Results   []TestResult
+}
+
+type TestResult struct {
+ID             int
+Status         string
+Input          string
+ExpectedOutput string
+Output         string
+RuntimeMS      int
+MemoryKB       int
+}
+
+type ContestParticipant struct {
+UserID         int
+Username       string
+Score          int
+ProblemsSolved []ContestProblem
+RatingChange   int
+}
+
+type ContestProblem struct {
+*ProblemInfo
+MaxPoints int
+}
+
+type Contest struct {
+ID          int
+Name        string
+Status      string
+StartTime   time.Time
+EndTime     time.Time
+Problems    []ContestProblem
+Leaderboard []ContestParticipant
+}
+
+type ExecutionPayload struct {
+ID            int
+Language      Language
+Code          string
+TestCases     []TestCase
+TimeLimitMS   int
+MemoryLimitKB int
+ExecutionType ExecutionType
+Points        int
+Penalty       int
+}
+
+type ExecutionResponse struct {
+SubmissionID  int
+Results       []TestResult
+ExecutionType ExecutionType
+ScoreDelta    int
+}
+
+type Discussion struct {
+ID       int
+Title    string
+Content  string
+Tags     []string
+AuthorID int
+IsActive bool
+Votes    int // Sum of all votes
+Comments []DiscussionComment
+}
+
+type DiscussionComment struct {
+ID       int
+Content  string
+AuthorID int
+}
+
+type SignupPayload struct {
+Username string
+Email    string
+Password string
+}
+
+type LoginPayload struct {
+Username string
+Password string
+}
+
+type AddVotePayload struct {
+DiscussionID int
+Vote         Vote
+}
+
+
+type RunCodePayload struct {
+ProblemID int
+Language Language
+Code string
+Cases []TestCase
+}
+
+type SubmissionPayload struct {
+ProblemID int
+Language Language
+Code string
+}
+
+const okResp = map[string]any{"message": "ok"}
+const idResp = map[string]any{"id": 1}
+---
+r.Post("/signup", h.Signup)
+r.Post("/login", h.Login)
+r.Get("/profile/{username}", h.GetUserProfile)
+r.Get("/problems", h.GetProblems)
+r.Get("/problem/{slug}", h.GetProblemBySlug)
+
+// Public contest access
+r.Get("/contests", h.GetAllContests)
+r.Get("/contest/{id}", h.GetContestByID)
+r.Get("/contest/{id}/leaderboard", h.GetLeaderboard)
+
+r.Get("/discussion/{id}", h.GetDiscussionByID)
+
+// Protected routes
+r.Group(func(protected chi.Router) {
+protected.Use(AuthMiddleware) // Obtains userID and role from token
+
+r.Group(func(admin chi.Router) {
+admin.Use(AdminOnlyMiddleware)
+
+admin.Post("/problems", h.AddProblem)
+admin.Put("/problems/{id}", h.UpdateProblem)
+
+admin.Post("/contest", h.CreateContest)
+admin.Put("/contest/{id}", h.UpdateContest)
+
+admin.Post("/contest/{id}/start", h.StartContest)
+admin.Post("/contest/{id}/end", h.EndContest)
+})
+
+protected.Post("/run", h.RunCode)
+protected.Post("/submit", h.SubmitCode)
+
+protected.Get("/submissions/{problemID}", h.GetUserSubmissions)
+protected.Get("/submission/{runID}", h.GetSubmissionResult)
+
+protected.Post("/contest/{id}/join", h.JoinContest)
+
+protected.Post("/discussion", h.CreateDiscussion)
+protected.Put("/discussion", h.UpdateDiscussion)
+protected.Post("/discussion/vote", h.AddVoteToDiscussion)
+})
+---
+Signup: Body: SignupPayload; Response: okResp
+Login:  Body: LoginPayload; Response: okResp
+GetUserProfile: Path: username; Response: User
+GetProblems: Response: []ProblemInfo
+AddProblem: Body: ProblemDetail; Response: idResp
+UpdateProblem: Path: id; Body: ProblemDetail
+GetProblemBySlug: Path: slug; Response: ProblemDetail
+RunCode: RunCodePayload; Response: idResp
+GetRunResult: Path: runID; Response: Submission
+SubmitCode: Body: SubmissionPayload; Response: idResp
+GetSubmissionResult: Path: runID; Response: Submission
+GetUserSubmissions: Path: problemID; Response: []Submission
+CreateContest: Body: Contest; Response: idResp
+UpdateContest: Path: id; Body: Contest
+GetAllContests: Response: []Contest
+GetContestByID: Path: id; Response: Contest
+JoinContest: Path: id
+StartContest: Path: id
+EndContest: Path: id
+GetLeaderboard: Path: id; Response: []ContestParticipant
+CreateDiscussion: Body: Discussion; Response: idResp
+UpdateDiscussion: Body: Discussion
+GetDiscussionByID: Path: id; Response: Discussion
+AddVotePayload: Body: AddVotePayload
