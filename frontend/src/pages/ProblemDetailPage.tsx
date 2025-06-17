@@ -120,7 +120,7 @@ const ProblemDetailPage: React.FC = () => {
         Cases: testCases,
       };
       const res = await runCode(payload);
-      pollForResults(res.run_id);
+      pollForResults(res.data.run_id);
     } catch (error) {
       console.error('Error running code:', error);
     }
@@ -136,7 +136,7 @@ const ProblemDetailPage: React.FC = () => {
         Code: code,
       };
       const res = await runCode(payload); // Assuming submitSolution returns same as runCode
-      pollForResults(res.submission_id);
+      pollForResults(res.data.run_id);
     } catch (error) {
       console.error('Error submitting solution:', error);
     } finally {
@@ -215,8 +215,8 @@ const ProblemDetailPage: React.FC = () => {
           running={running}
           submitting={submitting}
           output={output}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          // activeTab={activeTab}
+          // setActiveTab={setActiveTab}
         />
       ) : (
         <div>

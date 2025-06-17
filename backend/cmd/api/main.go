@@ -48,8 +48,14 @@ func main() {
 				status = fmt.Sprintf("%s on Test Case : %d", v.Status, i+1)
 			}
 		}
-		log.Println("Result received: ", status, runtime, memory)
 		if er.ExecutionType == EXECUTION_RUN || er.ExecutionType == EXECUTION_SUBMIT {
+			if er.ExecutionType == EXECUTION_SUBMIT {
+				for i := range er.Results {
+					er.Results[i].Input = ""
+					er.Results[i].Output = ""
+					er.Results[i].ExpectedOutput = ""
+				}
+			}
 			err := srv.UpdateSubmission(ctx, &Submission{
 				ID:     er.SubmissionID,
 				Status: status,

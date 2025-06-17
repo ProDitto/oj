@@ -77,7 +77,7 @@ const TestCaseEditor: React.FC<TestCaseEditorProps> = ({
                                 Case {idx + 1}
 
                                 {testCases.length > 1 && (
-                                    <button
+                                    <span
                                         type="button"
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -86,7 +86,7 @@ const TestCaseEditor: React.FC<TestCaseEditorProps> = ({
                                         className="ml-2 text-red-400 hover:text-red-600 transition-colors"
                                     >
                                         <Trash2 size={14} />
-                                    </button>
+                                    </span>
                                 )}
                             </button>
                         ))}

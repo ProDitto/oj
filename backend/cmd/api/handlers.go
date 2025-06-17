@@ -295,7 +295,7 @@ func (h *Handler) GetSubmissionResult(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	sub.Results = make([]TestResult, 0)
+	// sub.Results = make([]TestResult, 0)
 	json.NewEncoder(w).Encode(sub)
 }
 

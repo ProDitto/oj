@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://glowing-giggle-74gwwvrxpxg2rj56-8080.app.github.dev',
+  baseURL: 'https://turbo-waddle-7v79v67qjwpw2rr76-8080.app.github.dev',
   headers: {
     'Content-Type': 'application/json',
   },
