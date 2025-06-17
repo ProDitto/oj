@@ -65,7 +65,7 @@ export interface ProblemDetail {
 
 export interface TestResult {
     ID: number;
-    Status: SubmissionStatus;
+    Status: string;
     StdOut: string;
     StdErr: string;
     RuntimeMS: number;
@@ -79,7 +79,7 @@ export interface Submission {
     ContestID: number;
     Language: Language;
     Code: string; w
-    Status: SubmissionStatus;
+    Status: string;
     Message: string;
     Results: TestResult[];
 }

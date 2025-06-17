@@ -94,7 +94,18 @@ const ProblemDetailPage: React.FC = () => {
 
     const intervalId = setInterval(async () => {
       try {
-        const result = await getSubmission(runId);
+        const response = await getSubmission(runId);
+        const result = response.data
+        if (!result.Results) {
+          result.Results = [{
+            ID: 1,
+            Status: result.Message,
+            StdOut: "",
+            StdErr: "",
+            RuntimeMS: 0,
+            MemoryKB: 0,
+          }]
+        } 
         if (result && result.Status !== 'pending') {
           clearInterval(intervalId);
           currentRunId.current = 0;
@@ -215,8 +226,7 @@ const ProblemDetailPage: React.FC = () => {
           running={running}
           submitting={submitting}
           output={output}
-          // activeTab={activeTab}
-          // setActiveTab={setActiveTab}
+          submissionDetails={submissionDetails}
         />
       ) : (
         <div>
