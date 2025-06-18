@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { adminGetProblemBySlug, createProblem, updateProblem } from '../../api/endpoints';
-import type { ProblemDetail, TestCase, Limits } from '../../types';
+import type { ProblemDetail } from '../../types';
 import TagSelector from './TagSelector';
 import DifficultySelector from './DifficultySelector';
 import TestCaseForm from './TestCaseForm';

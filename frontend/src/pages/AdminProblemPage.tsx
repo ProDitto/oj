@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { adminGetProblems, deleteProblem } from '../api/endpoints';
-import type { ProblemInfo } from '../types';
+import type { ProblemInfo, Difficulty } from '../types';
 import { Link } from 'react-router-dom';
 import { Plus as FaPlus, Edit as FaEdit, Trash as FaTrash, Search as FaSearch, Award as FaTimes, Ham as FaSort, Award as FaSortUp, Apple as FaSortDown } from 'lucide-react';
-import ProblemList from '../components/admin/ProblemList';
+// import ProblemList from '../components/admin/ProblemList';
 
 const AdminProblemPage: React.FC = () => {
     const [problems, setProblems] = useState<ProblemInfo[]>([]);
@@ -54,7 +54,7 @@ const AdminProblemPage: React.FC = () => {
             const term = searchTerm.toLowerCase();
             result = result.filter(p =>
                 p.Title.toLowerCase().includes(term) ||
-                p.Description.toLowerCase().includes(term) ||
+                // p.Description.toLowerCase().includes(term) ||
                 p.Slug.toLowerCase().includes(term)
             );
         }
@@ -134,10 +134,10 @@ const AdminProblemPage: React.FC = () => {
 
     const DifficultyBadge = ({ difficulty }: { difficulty: Difficulty }) => (
         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${difficulty === 'easy'
-                ? 'bg-green-100 text-green-800'
-                : difficulty === 'medium'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800'
+            ? 'bg-green-100 text-green-800'
+            : difficulty === 'medium'
+                ? 'bg-yellow-100 text-yellow-800'
+                : 'bg-red-100 text-red-800'
             }`}>
             {difficulty}
         </span>
@@ -330,7 +330,7 @@ const AdminProblemPage: React.FC = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">{problem.Title}</div>
-                                                <div className="text-sm text-gray-500 truncate max-w-xs">{problem.Description}</div>
+                                                {/* <div className="text-sm text-gray-500 truncate max-w-xs">{problem.Description}</div> */}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <DifficultyBadge difficulty={problem.Difficulty} />
@@ -352,8 +352,8 @@ const AdminProblemPage: React.FC = () => {
                                             {selectedStatus === '' && (
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${problem.Status === 'active'
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-yellow-100 text-yellow-800'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-yellow-100 text-yellow-800'
                                                         }`}>
                                                         {problem.Status}
                                                     </span>

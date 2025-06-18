@@ -57,7 +57,8 @@ const AddProblemPage: React.FC = () => {
 
     const onSubmit = async (data: ProblemDetail) => {
         try {
-            const response = await createProblem(data);
+            // const response = await createProblem(data);
+            await createProblem(data);
             navigate(`/problem/${data.Slug}`);
         } catch (error) {
             console.error('Error creating problem:', error);

@@ -1,8 +1,9 @@
 import React from 'react';
+import type { Difficulty } from '../../types';
 
 interface DifficultySelectorProps {
     difficulty: string;
-    setDifficulty: (difficulty: string) => void;
+    setDifficulty: (difficulty: Difficulty) => void;
 }
 
 const DifficultySelector: React.FC<DifficultySelectorProps> = ({ difficulty, setDifficulty }) => {
@@ -12,7 +13,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({ difficulty, set
             <select
                 className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
+                onChange={(e) => setDifficulty(e.target.value as Difficulty)}
             >
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>

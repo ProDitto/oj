@@ -23,7 +23,7 @@ const App = () => {
       setUser(res.data)
     } catch (err) {
       console.log("Error: ", err)
-      setUser()
+      setUser(undefined)
       // setServerError(err.response?.data?.message || 'Something went wrong.');
     }
   };

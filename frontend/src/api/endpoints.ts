@@ -45,8 +45,8 @@ export const createProblem = (data: ProblemDetail) =>
     axios.post<IdResponse>('/problems', data);
 
 // TODO: Remove/Update this
-export const deleteProblem = (data: ProblemDetail) =>
-    axios.post<IdResponse>('/problems', data);
+export const deleteProblem = (problemId: number) =>
+    axios.post<OkResponse>(`/problems/${problemId}`);
 
 export const getProblemBySlug = (slug: string) =>
     axios.get<ProblemDetail>(`/problem/${slug}`);
@@ -110,3 +110,6 @@ export const updateDiscussion = (data: Discussion) =>
 
 export const voteDiscussion = (data: AddVotePayload) =>
     axios.post<OkResponse>('/discussion/vote', data);
+
+export const commentDiscussion = (data: AddCommentPayload) =>
+    axios.post<IdResponse>('/discussion/comment', data);

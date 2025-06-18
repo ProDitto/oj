@@ -365,6 +365,8 @@ func (s *serviceImpl) GetProblemBySlug(ctx context.Context, slug string) (*Probl
 	// Limits
 	_ = s.loadLimits(ctx, &pd)
 
+	fmt.Println("Test casees:", pd.TestCases)
+
 	return &pd, nil
 }
 
@@ -1289,6 +1291,19 @@ func (s *serviceImpl) AddVoteToDiscussion(ctx context.Context, userID, discussio
 		return fmt.Errorf("failed to vote on discussion: %w", err)
 	}
 	return nil
+}
+
+func (s *serviceImpl) AddCommentToDiscussion(ctx context.Context, userID int, payload AddCommentPayload) (int, error) {
+	const query = `
+	INSERT INTO discussion_comments (author_id, discussion_id, content)
+	VALUES ($1, $2, $3) returning id;
+	`
+	id := 0
+	err := s.db.QueryRowContext(ctx, query, userID, payload.DiscussionID, payload.Content).Scan(&id)
+	if err != nil {
+		return 0, fmt.Errorf("failed to vote on discussion: %w", err)
+	}
+	return id, nil
 }
 
 func (s *serviceImpl) UpdateSubmission(ctx context.Context, submission *Submission) error {

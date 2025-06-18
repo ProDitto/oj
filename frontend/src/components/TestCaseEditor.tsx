@@ -21,6 +21,7 @@ const TestCaseEditor: React.FC<TestCaseEditorProps> = ({
 
     const addTestCase = () => {
         const newTestCase: TestCase = {
+            ID: 1,
             Input: '',
             ExpectedOutput: '',
         };

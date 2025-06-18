@@ -1,11 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Editor } from '@monaco-editor/react';
 import LanguageSelector from '../components/LanguageSelector';
 import TestCaseEditor from '../components/TestCaseEditor';
 import RunSubmitButtons from '../components/RunSubmitButtons';
-import SubmissionResult from '../components/SubmissionResult';
+import type { ProblemDetail, TestCase, Language, Submission } from '../types';
+// import SubmissionResult from '../components/SubmissionResult';
 
-const ProblemDetails: React.FC<any> = ({ problem, code, setCode, language, setLanguage, testCases, setTestCases, handleRun, handleSubmit, running, submitting, output, submissionDetails }) => {
+type ProblemDetailsProps = {
+  problem: ProblemDetail
+  code: string
+  setCode: (code: string) => void
+  language: Language
+  setLanguage: (language: Language) => void
+  testCases: TestCase[]
+  setTestCases: (tcs: TestCase[]) => void
+  handleRun: () => void
+  handleSubmit: () => void
+  running: boolean
+  submitting: boolean
+  output: string
+  submissionDetails: Submission
+}
+
+const ProblemDetails: React.FC<ProblemDetailsProps> = ({ problem, code, setCode, language, setLanguage, testCases, setTestCases, handleRun, handleSubmit, running, submitting, output, submissionDetails }) => {
   const [activeTab, setActiveTab] = useState(0);
   return (
     <div>

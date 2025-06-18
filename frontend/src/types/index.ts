@@ -78,7 +78,7 @@ export interface Submission {
     UserID: number;
     ContestID: number;
     Language: Language;
-    Code: string; w
+    Code: string;
     Status: string;
     Message: string;
     Results: TestResult[];
@@ -150,6 +150,11 @@ export interface SubmissionPayload {
 export interface AddVotePayload {
     DiscussionID: number;
     Vote: Vote;
+}
+
+export interface AddCommentPayload {
+    DiscussionID: number;
+    Content: string;
 }
 
 export interface OkResponse {

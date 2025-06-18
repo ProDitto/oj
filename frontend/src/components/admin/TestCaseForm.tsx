@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// import { TestCase } from '../../types';
+import type { TestCase } from '../../types';
 
 interface TestCaseFormProps {
     testCases: TestCase[];

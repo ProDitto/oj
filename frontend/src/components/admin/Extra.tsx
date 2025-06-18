@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type {Language,ProblemExample} from '../../types';
 
 export const ConstraintList: React.FC<{
   constraints: string[];
@@ -81,7 +82,7 @@ export const SolutionEditor: React.FC<{
   solutionCode: string;
   setSolutionCode: (code: string) => void;
 }> = ({ language, setLanguage, solutionCode, setSolutionCode }) => {
-  const languages: Language[] = ['python', 'javascript', 'java', 'c', 'cpp', 'go'];
+  const languages: Language[] = ['python', 'javascript', 'java', 'cpp'];
 
   return (
     <div className="space-y-4">

@@ -166,6 +166,11 @@ type AddVotePayload struct {
 	Vote         Vote
 }
 
+type AddCommentPayload struct {
+	DiscussionID int
+	Content      string
+}
+
 type RunCodePayload struct {
 	ProblemID int
 	Language  Language

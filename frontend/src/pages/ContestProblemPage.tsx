@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getContestById, getProblemBySlug, runCode, submitSolution, getSubmission } from '../api/endpoints';
-import type { Contest, ContestProblem, Language, RunCodePayload, TestCase, Submission, SubmissionPayload } from '../types';
+import { getContestById, runCode, submitSolution } from '../api/endpoints';
+import type { Contest, ContestProblem, Language, RunCodePayload, Submission, SubmissionPayload } from '../types';
 import Editor from '@monaco-editor/react';
 import clsx from 'clsx';
 
@@ -9,9 +9,10 @@ const ContestProblemPage: React.FC = () => {
     const { contestId } = useParams<{ contestId: string }>();
     const [contest, setContest] = useState<Contest | null>(null);
     const [loading, setLoading] = useState(true);
-    const [language, setLanguage] = useState<Language>('python');
+    // const [language, setLanguage] = useState<Language>('python');
+    const [language] = useState<Language>('python');
     const [code, setCode] = useState<string>('');
-    const [testCases, setTestCases] = useState<TestCase[]>([]);
+    // const [testCases, setTestCases] = useState<TestCase[]>([]);
     const [activeTab, setActiveTab] = useState(0); // 0 for Problems
     const [activeProblem, setActiveProblem] = useState<ContestProblem | null>(null);
     const [output, setOutput] = useState<string>('');
@@ -37,20 +38,20 @@ const ContestProblemPage: React.FC = () => {
         fetchContestDetails();
     }, [contestId]);
 
-    useEffect(() => {
-        const fetchContestProblems = async () => {
-            if (!contest) return;
-            try {
-                const problemsResponse = await getContestProblems(contest.ID);
-                setProblems(problemsResponse.data);
-                setActiveProblem(problemsResponse.data[0]); // Set the first problem as active by default
-            } catch (error) {
-                console.error("Error fetching contest problems", error);
-            }
-        };
+    // useEffect(() => {
+    //     const fetchContestProblems = async () => {
+    //         if (!contest) return;
+    //         try {
+    //             const problemsResponse = await getContestProblems(contest.ID);
+    //             setProblems(problemsResponse.data);
+    //             setActiveProblem(problemsResponse.data[0]); // Set the first problem as active by default
+    //         } catch (error) {
+    //             console.error("Error fetching contest problems", error);
+    //         }
+    //     };
 
-        fetchContestProblems();
-    }, [contest]);
+    //     fetchContestProblems();
+    // }, [contest]);
 
     const handleRun = async () => {
         if (!activeProblem) return;
@@ -62,7 +63,7 @@ const ContestProblemPage: React.FC = () => {
         };
         try {
             const response = await runCode(payload);
-            setOutput(response.data.output);
+            // setOutput(response.data.output);
         } catch (error) {
             console.error("Error running code", error);
             setOutput('Error running code');
@@ -136,7 +137,7 @@ const ContestProblemPage: React.FC = () => {
                                     height="400px"
                                     defaultLanguage={language}
                                     value={code}
-                                    onChange={setCode}
+                                    onChange={(e)=>setCode(e.target.value)}
                                 />
                             </div>
 

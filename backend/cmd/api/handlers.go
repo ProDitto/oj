@@ -88,6 +88,7 @@ func (h *Handler) Routes() http.Handler {
 		protected.Post("/discussion", h.CreateDiscussion)
 		protected.Put("/discussion", h.UpdateDiscussion)
 		protected.Post("/discussion/vote", h.AddVoteToDiscussion)
+		protected.Post("/discussion/comment", h.AddCommentToDiscussion)
 	})
 
 	return r
@@ -527,4 +528,28 @@ func (h *Handler) AddVoteToDiscussion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) AddCommentToDiscussion(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(ContextUserIDKey).(int)
+	if !ok {
+		http.Error(w, "unauthorized: missing user_id in context", http.StatusUnauthorized)
+		return
+	}
+
+	var payload AddCommentPayload
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	id, err := h.service.AddCommentToDiscussion(r.Context(), userID, payload)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]int{"id": id})
 }

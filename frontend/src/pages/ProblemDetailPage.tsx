@@ -8,6 +8,7 @@ import {
   voteDiscussion,
   createDiscussion,
   updateDiscussion,
+  submitSolution,
 } from '../api/endpoints';
 import type {
   ProblemDetail,
@@ -17,7 +18,7 @@ import type {
   TestCase,
   Submission,
   Discussion,
-  AddVotePayload,
+  // AddVotePayload,
 } from '../types';
 import DiscussionsTab from '../components/DiscussionsTab';
 import ProblemDetails from '../components/ProblemDetails';
@@ -110,7 +111,7 @@ const ProblemDetailPage: React.FC = () => {
           clearInterval(intervalId);
           currentRunId.current = 0;
           setRunning(false);
-          setOutput(result.Output || '');
+          // setOutput(result.Output || '');
           setSubmissionDetails(result);
         }
       } catch (error) {
@@ -125,7 +126,7 @@ const ProblemDetailPage: React.FC = () => {
     if (!problem) return;
     try {
       const payload: RunCodePayload = {
-        ProblemID: problem.id,
+        ProblemID: problem.ID,
         Language: language,
         Code: code,
         Cases: testCases,
@@ -142,11 +143,11 @@ const ProblemDetailPage: React.FC = () => {
     setSubmitting(true);
     try {
       const payload: SubmissionPayload = {
-        ProblemID: problem.id,
+        ProblemID: problem.ID,
         Language: language,
         Code: code,
       };
-      const res = await runCode(payload); // Assuming submitSolution returns same as runCode
+      const res = await submitSolution(payload); // Assuming submitSolution returns same as runCode
       pollForResults(res.data.run_id);
     } catch (error) {
       console.error('Error submitting solution:', error);
@@ -157,7 +158,7 @@ const ProblemDetailPage: React.FC = () => {
 
   const handleCreateDiscussion = async (newDiscussion: Discussion) => {
     try {
-      const response = await createDiscussion({ ...newDiscussion, ID: problem?.ID });
+      const response = await createDiscussion({ ...newDiscussion, ID: problem?.ID+0 });
       setDiscussions([...discussions, { ...newDiscussion, ID: response.data.id }]);
     } catch (error) {
       console.error('Error creating discussion:', error);
@@ -175,13 +176,13 @@ const ProblemDetailPage: React.FC = () => {
     }
   };
 
-  const handleVoteDiscussion = async (discussionId: number, voteType: 'up' | 'down') => {
+  const handleVoteDiscussion = async (discussionId: number, voteType: number) => {
     try {
-      await voteDiscussion({ discussionId, voteType });
+      await voteDiscussion({ DiscussionID: discussionId, Vote: voteType>0 ? +1 : -1 });
       setDiscussions(prev =>
         prev.map(d =>
           d.ID === discussionId
-            ? { ...d, Votes: d.Votes + (voteType === 'up' ? 1 : -1) }
+            ? { ...d, Votes: d.Votes + (voteType > 0 ? 1 : -1) }
             : d
         )
       );
