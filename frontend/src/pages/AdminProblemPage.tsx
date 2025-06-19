@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { adminGetProblems, deleteProblem } from '../api/endpoints';
 import type { ProblemInfo, Difficulty } from '../types';
 import { Link } from 'react-router-dom';
-import { Plus as FaPlus, Edit as FaEdit, Trash as FaTrash, Search as FaSearch, Award as FaTimes, Ham as FaSort, Award as FaSortUp, Apple as FaSortDown } from 'lucide-react';
+import { Plus as FaPlus, Edit as FaEdit, Trash as FaTrash, Search as FaSearch, Clock as FaTimes, ArrowUpDown as FaSort, ArrowUp as FaSortUp, ArrowDown as FaSortDown } from 'lucide-react';
 // import ProblemList from '../components/admin/ProblemList';
 
 const AdminProblemPage: React.FC = () => {

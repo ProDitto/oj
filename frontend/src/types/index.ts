@@ -2,7 +2,7 @@ export type UserRole = 'admin' | 'user';
 export type ProblemStatus = 'draft' | 'validate' | 'active' | 'rejected' | 'archieved';
 export type SubmissionStatus = 'pending' | 'accepted' | 'rejected';
 export type ContestStatus = 'upcoming' | 'ongoing' | 'finished';
-export type Language = 'python' | 'cpp' | 'java' | 'javascript';
+export type Language = 'python' | 'cpp' | 'java' | 'go' | 'c';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type Vote = 1 | -1;
 

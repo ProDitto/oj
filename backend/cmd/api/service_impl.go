@@ -457,7 +457,9 @@ func (s *serviceImpl) AddProblem(ctx context.Context, problem *ProblemDetail) (i
 		return 0, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	return problemID, nil
+	err = s.validateCode(ctx, problem.Slug)
+
+	return problemID, err
 }
 
 func (s *serviceImpl) insertProblemAssociations(ctx context.Context, tx *sql.Tx, problemID int, problem *ProblemDetail) error {
@@ -594,7 +596,7 @@ func (s *serviceImpl) UpdateProblemByID(ctx context.Context, id int, problem *Pr
 			solution_language = $5,
 			solution_code = $6,
 			failure_reason = $7
-		WHERE id = $8;
+		WHERE id = $8 returning slug;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, maxQueryTime)
@@ -605,13 +607,15 @@ func (s *serviceImpl) UpdateProblemByID(ctx context.Context, id int, problem *Pr
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
+	slug := ""
 	constraints := strings.Join(problem.Constraints, "\n")
+	problem.Status = "draft"
 
-	_, err = tx.ExecContext(ctx, problemQuery,
+	err = tx.QueryRowContext(ctx, problemQuery,
 		problem.Title, problem.Description, constraints,
 		problem.Status, problem.SolutionLanguage, problem.SolutionCode,
 		problem.FailureReason, id,
-	)
+	).Scan(&slug)
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("failed to update problem: %w", err)
@@ -681,7 +685,9 @@ func (s *serviceImpl) UpdateProblemByID(ctx context.Context, id int, problem *Pr
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
-	return nil
+
+	err = s.validateCode(ctx, slug)
+	return err
 }
 
 func (s *serviceImpl) RunCode(ctx context.Context, userID, problemID int, language Language, code string, testCases []TestCase) (int, error) {
@@ -1306,6 +1312,19 @@ func (s *serviceImpl) AddCommentToDiscussion(ctx context.Context, userID int, pa
 	return id, nil
 }
 
+func (s *serviceImpl) UpdateProblemStatus(ctx context.Context, problemID int, status ProblemStatus) error {
+	const query = `
+		UPDATE problems
+		SET status = $2
+		WHERE id = $1;
+	`
+	_, err := s.db.ExecContext(ctx, query, problemID, status)
+	if err != nil {
+		return fmt.Errorf("failed to update problem status: %w", err)
+	}
+	return nil
+}
+
 func (s *serviceImpl) UpdateSubmission(ctx context.Context, submission *Submission) error {
 	// // Define the SQL queries for updating the submission and inserting test results
 	// const submissionQuery = `
@@ -1403,4 +1422,37 @@ func (s *serviceImpl) UpdateSubmission(ctx context.Context, submission *Submissi
 	}
 
 	return nil
+}
+
+func (s *serviceImpl) validateCode(ctx context.Context, slug string) error {
+	problem, err := s.AdminGetProblemBySlug(ctx, slug)
+	if err != nil {
+		return err
+	}
+
+	runtime := 10
+	memory := 50
+
+	for _, limit := range problem.Limits {
+		if limit.Language == problem.SolutionLanguage {
+			runtime = limit.TimeLimitMS
+			memory = limit.MemoryLimitKB
+		}
+	}
+
+	payload := ExecutionPayload{
+		ID:            problem.ID,
+		Language:      problem.SolutionLanguage,
+		Code:          problem.SolutionCode,
+		TestCases:     problem.TestCases,
+		TimeLimitMS:   runtime,
+		MemoryLimitKB: memory,
+		ExecutionType: EXECUTION_VALIDATE,
+		ContestID:     0,
+		ProblemID:     problem.ID,
+	}
+
+	err = s.redis.ExecuteCode(ctx, payload)
+
+	return err
 }

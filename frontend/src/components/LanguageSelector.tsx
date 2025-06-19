@@ -1,6 +1,6 @@
 import React from 'react';
 
-const languageOptions = ['python', 'cpp', 'java', 'javascript'];
+const languageOptions = ['python', 'cpp', 'java', 'go', 'c'];
 
 const LanguageSelector: React.FC<any> = ({ language, setLanguage }) => (
     <div className="flex justify-between items-center">

@@ -1,115 +1,142 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Limits, Language } from '../../types';
+
+export type Language = 'python' | 'cpp' | 'java' | 'go' | 'c';
+
+const languages: Language[] = ['python', 'cpp', 'java', 'go', 'c'];
+
+const TIME_RATIOS: Record<Language, number> = {
+    cpp: 1,
+    java: 2,
+    python: 10,
+    go: 1.5,
+    c: 1.2,
+};
+
+const MEMORY_RATIOS: Record<Language, number> = {
+    cpp: 1,
+    java: 2.5,
+    python: 4,
+    go: 2,
+    c: 1.1,
+};
+
 
 interface LimitFormProps {
     limits: Limits[];
     setLimits: (limits: Limits[]) => void;
 }
 
-const languages: Language[] = ['python', 'cpp', 'java', 'javascript'];
-
 const LimitForm: React.FC<LimitFormProps> = ({ limits, setLimits }) => {
-    const [language, setLanguage] = useState<Language>('python');
-    const [timeLimit, setTimeLimit] = useState(1000);
-    const [memoryLimit, setMemoryLimit] = useState(256);
+    const [overrides, setOverrides] = useState<Record<Language, { time: boolean; memory: boolean }>>(
+        Object.fromEntries(languages.map((lang) => [lang, { time: false, memory: false }]))
+    );
 
-    const handleAddLimit = () => {
-        const newLimit: Limits = {
+    // Helper to compute base values
+    const getBase = (field: 'TimeLimitMS' | 'MemoryLimitKB', ratios: Record<Language, number>) => {
+        for (const lang of languages) {
+            if (!overrides[lang][field === 'TimeLimitMS' ? 'time' : 'memory']) {
+                const baseValue = limits.find((l) => l.Language === lang)?.[field];
+                if (baseValue != null) {
+                    const ratio = ratios[lang];
+                    return baseValue / ratio;
+                }
+            }
+        }
+        return field === 'TimeLimitMS' ? 1000 : 256; // fallback
+    };
+
+    const updateField = (
+        changedLang: Language,
+        field: 'TimeLimitMS' | 'MemoryLimitKB',
+        value: number
+    ) => {
+        const isTime = field === 'TimeLimitMS';
+        const ratios = isTime ? TIME_RATIOS : MEMORY_RATIOS;
+        const newOverrides = { ...overrides, [changedLang]: { ...overrides[changedLang], [isTime ? 'time' : 'memory']: true } };
+
+        const base = value / ratios[changedLang];
+
+        const updated = limits.map((limit) => {
+            const lang = limit.Language;
+            if (lang === changedLang || newOverrides[lang][isTime ? 'time' : 'memory']) return limit;
+
+            return {
+                ...limit,
+                [field]: Math.round(base * ratios[lang]),
+            };
+        });
+
+        const modified = updated.map((limit) =>
+            limit.Language === changedLang ? { ...limit, [field]: value } : limit
+        );
+
+        setOverrides(newOverrides);
+        setLimits(modified);
+    };
+
+    useEffect(() => {
+        // Initialize all values using default ratios
+        const baseTime = 1000;
+        const baseMemory = 256;
+
+        const initialLimits = languages.map((lang) => ({
             ProblemID: 0,
-            Language: language,
-            TimeLimitMS: timeLimit,
-            MemoryLimitKB: memoryLimit,
-        };
-        setLimits([...limits, newLimit]);
-        setLanguage('python'); // reset to default
-        setTimeLimit(1000);
-        setMemoryLimit(256);
-    };
+            Language: lang,
+            TimeLimitMS: Math.round(baseTime * TIME_RATIOS[lang]),
+            MemoryLimitKB: Math.round(baseMemory * MEMORY_RATIOS[lang]),
+        }));
 
-    const handleRemoveLimit = (index: number) => {
-        const newLimits = [...limits];
-        newLimits.splice(index, 1);
-        setLimits(newLimits);
-    };
+        setLimits(initialLimits);
+    }, []);
 
     return (
-        <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-700">Problem Limits</h3>
+        <div className="space-y-6">
+            <h3 className="text-sm font-medium text-gray-700">Problem Limits (Auto-Ratio Based)</h3>
 
-            <div className="flex gap-4 items-end">
-                <div>
-                    <label className="block text-xs text-gray-500 mb-1">Language</label>
-                    <select
-                        className="w-full px-3 py-2 border rounded-md shadow-sm"
-                        value={language}
-                        onChange={(e) => setLanguage(e.target.value as Language)}
-                    >
-                        {languages.map((lang) => (
-                            <option key={lang} value={lang}>
-                                {lang}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <div>
-                    <label className="block text-xs text-gray-500 mb-1">Time Limit (ms)</label>
-                    <input
-                        type="number"
-                        className="w-full px-3 py-2 border rounded-md shadow-sm"
-                        value={timeLimit}
-                        onChange={(e) => setTimeLimit(Number(e.target.value))}
-                    />
-                </div>
-                <div>
-                    <label className="block text-xs text-gray-500 mb-1">Memory Limit (KB)</label>
-                    <input
-                        type="number"
-                        className="w-full px-3 py-2 border rounded-md shadow-sm"
-                        value={memoryLimit}
-                        onChange={(e) => setMemoryLimit(Number(e.target.value))}
-                    />
-                </div>
-                <button
-                    type="button"
-                    className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    onClick={handleAddLimit}
-                >
-                    Add Limit
-                </button>
-            </div>
-
-            {limits.length > 0 && (
-                <div className="border rounded-md overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Language</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Time Limit</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Memory Limit</th>
-                                <th className="px-3 py-2"></th>
+            <div className="border rounded-md overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Language</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Time Limit (ms)</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Memory Limit (KB)</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Overrides</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {limits.map((limit) => (
+                            <tr key={limit.Language}>
+                                <td className="px-3 py-2 text-sm">{limit.Language}</td>
+                                <td className="px-3 py-2 text-sm">
+                                    <input
+                                        type="number"
+                                        className="w-24 px-2 py-1 border rounded"
+                                        value={limit.TimeLimitMS}
+                                        onChange={(e) =>
+                                            updateField(limit.Language, 'TimeLimitMS', Number(e.target.value))
+                                        }
+                                    />
+                                </td>
+                                <td className="px-3 py-2 text-sm">
+                                    <input
+                                        type="number"
+                                        className="w-24 px-2 py-1 border rounded"
+                                        value={limit.MemoryLimitKB}
+                                        onChange={(e) =>
+                                            updateField(limit.Language, 'MemoryLimitKB', Number(e.target.value))
+                                        }
+                                    />
+                                </td>
+                                <td className="px-3 py-2 text-xs text-gray-500">
+                                    {overrides[limit.Language].time ? '⏱ ' : ''}
+                                    {overrides[limit.Language].memory ? '💾' : ''}
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {limits.map((limit, index) => (
-                                <tr key={index}>
-                                    <td className="px-3 py-2 whitespace-nowrap text-sm">{limit.Language}</td>
-                                    <td className="px-3 py-2 whitespace-nowrap text-sm">{limit.TimeLimitMS} ms</td>
-                                    <td className="px-3 py-2 whitespace-nowrap text-sm">{limit.MemoryLimitKB} KB</td>
-                                    <td className="px-3 py-2 whitespace-nowrap text-right text-sm">
-                                        <button
-                                            type="button"
-                                            className="text-red-600 hover:text-red-900"
-                                            onClick={() => handleRemoveLimit(index)}
-                                        >
-                                            Remove
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 };

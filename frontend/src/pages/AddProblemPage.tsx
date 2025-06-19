@@ -132,7 +132,8 @@ const AddProblemPage: React.FC = () => {
                         <option value="python">Python</option>
                         <option value="cpp">C++</option>
                         <option value="java">Java</option>
-                        <option value="javascript">JavaScript</option>
+                        <option value="go">Go</option>
+                        <option value="c">C</option>
                     </select>
                 </div>
 
@@ -171,7 +172,8 @@ const AddProblemPage: React.FC = () => {
                                 <option value="python">Python</option>
                                 <option value="cpp">C++</option>
                                 <option value="java">Java</option>
-                                <option value="javascript">JavaScript</option>
+                                <option value="go">Go</option>
+                                <option value="c">C</option>
                             </select>
                             <input
                                 type="number"

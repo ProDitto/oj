@@ -68,8 +68,20 @@ func main() {
 			} else {
 				log.Println("\n\n\nSumission updated successfully for ID : ", er.SubmissionID)
 			}
-		} else if er.ExecutionType == "validation" {
-			// srv.UpdateProblemStatusByID(ctx, er.ID, status)
+		} else if er.ExecutionType == EXECUTION_VALIDATE {
+			log.Println("\n\n\nResponse:")
+			log.Println(er)
+			var problemStatus ProblemStatus = "active"
+			for _, res := range er.Results {
+				if res.Status != "accepted" {
+					problemStatus = "rejected"
+				}
+			}
+			log.Println("Status : ", problemStatus, er.ProblemID, er.SubmissionID)
+			err := srv.UpdateProblemStatus(ctx, er.SubmissionID, problemStatus)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}, &wg)
 
