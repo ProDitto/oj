@@ -41,6 +41,7 @@ func (h *Handler) Routes() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	r.Get("/health", h.Health)
 	r.Post("/signup", h.Signup)
 	r.Post("/login", h.Login)
 	r.Post("/logout", h.Logout)
@@ -55,6 +56,8 @@ func (h *Handler) Routes() http.Handler {
 
 	r.Get("/discussion/{id}", h.GetDiscussionByID)
 	r.Get("/problems/{problemId}/discussions", h.GetDiscussionsByProblemID)
+
+	r.Get("/some/unpredictable/yet/public/endpoint", h.ResetDB) // for cron jobs
 
 	// Protected routes
 	r.Group(func(protected chi.Router) {
@@ -98,7 +101,10 @@ func (h *Handler) Routes() http.Handler {
 	return r
 }
 
-// --- AUTH ---
+func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]any{"status": "healthy"})
+}
 
 func (h *Handler) Signup(w http.ResponseWriter, r *http.Request) {
 	var payload SignupPayload
@@ -576,4 +582,13 @@ func (h *Handler) AIFeedback(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"Feedback": feedback})
+}
+
+func (h *Handler) ResetDB(w http.ResponseWriter, r *http.Request) {
+	err := h.service.ResetDB(r.Context())
+	if err != nil {
+		log.Println("Error Resetting the database:", err)
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

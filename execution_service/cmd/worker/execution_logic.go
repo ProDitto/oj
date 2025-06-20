@@ -64,13 +64,12 @@ func ExecutePython(payload ExecuteCodePayload) (response ExecuteCodeResponse) {
 			results = append(results, TestResult{
 				ID:             tc.ID,
 				Input:          tc.Input,
-				Output:         "",
+				Output:         err.Error(),
 				ExpectedOutput: tc.ExpectedOutput,
 				RuntimeMS:      0,
 				MemoryKB:       0,
-				Status:         "Error: " + err.Error(),
+				Status:         "runtime error",
 			})
-			// finalStatus = "Error"
 			continue
 		}
 
@@ -84,6 +83,8 @@ func ExecutePython(payload ExecuteCodePayload) (response ExecuteCodeResponse) {
 		ticker := time.NewTicker(10 * time.Millisecond)
 		defer ticker.Stop()
 
+		output := ""
+
 	loop:
 		for {
 			select {
@@ -94,16 +95,18 @@ func ExecutePython(payload ExecuteCodePayload) (response ExecuteCodeResponse) {
 				}
 				if payload.MemoryLimitKB > 0 && mem > payload.MemoryLimitKB {
 					_ = cmd.Process.Kill()
-					status = "MLE"
+					status = "memory limit exceeded"
 					break loop
 				}
 			case <-ctx.Done():
 				_ = cmd.Process.Kill()
-				status = "TLE"
+				status = "time limit exceeded"
 				break loop
 			case err := <-done:
 				if err != nil {
-					status = "error"
+					status = "runtime error"
+					output = err.Error()
+
 				} else {
 					status = "accepted"
 				}
@@ -112,7 +115,9 @@ func ExecutePython(payload ExecuteCodePayload) (response ExecuteCodeResponse) {
 		}
 
 		end := time.Since(start)
-		output := strings.TrimSpace(outBuf.String())
+		if output == "" {
+			output = strings.TrimSpace(outBuf.String())
+		}
 		expected := strings.TrimSpace(tc.ExpectedOutput)
 
 		if status == "accepted" && output != expected {

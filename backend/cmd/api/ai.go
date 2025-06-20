@@ -11,13 +11,16 @@ import (
 )
 
 type AI struct {
-	aiClient *genai.Client
-	service  serviceImpl
+	aiClient            *genai.Client
+	service             serviceImpl
+	explanationTemplate string
+	feedbackTemplate    string
+	modelName           string
 }
 
-func NewAI(ctx context.Context, service serviceImpl) (*AI, error) {
+func NewAI(ctx context.Context, apiKey string, service serviceImpl) (*AI, error) {
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{
-		APIKey:  API_KEY,
+		APIKey:  apiKey,
 		Backend: genai.BackendGeminiAPI,
 	})
 	if err != nil {
@@ -40,10 +43,10 @@ func (ai *AI) AddProblemExplanation(problemID int) {
 		return
 	}
 
-	prompt := fmt.Sprintf(EXPLANATION_TEMPLATE, problem.SolutionCode, problem.Constraints[0])
+	prompt := fmt.Sprintf(ai.explanationTemplate, problem.SolutionCode, problem.Constraints[0])
 
 	var config *genai.GenerateContentConfig = &genai.GenerateContentConfig{Temperature: genai.Ptr[float32](0)}
-	result, err := ai.aiClient.Models.GenerateContent(ctx, AI_MODEL, genai.Text(prompt), config)
+	result, err := ai.aiClient.Models.GenerateContent(ctx, ai.modelName, genai.Text(prompt), config)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -56,64 +59,64 @@ func (ai *AI) AddProblemExplanation(problemID int) {
 }
 
 func (ai *AI) GetFeedback(ctx context.Context, problemID int, code string) string {
-	// if strings.TrimSpace(code) == "" {
-	// 	return "empty string"
-	// }
+	if strings.TrimSpace(code) == "" {
+		return "empty string"
+	}
 
-	// problem, err := ai.service.GetProblemForAIByID(ctx, problemID)
-	// if err != nil {
-	// 	return "invalid problem"
-	// }
+	problem, err := ai.service.GetProblemForAIByID(ctx, problemID)
+	if err != nil {
+		return "invalid problem"
+	}
 
-	// prompt := fmt.Sprintf(FEEDBACK_TEMPLATE, problem.Explanation, code)
+	prompt := fmt.Sprintf(ai.feedbackTemplate, problem.Explanation, code)
 
-	// var config *genai.GenerateContentConfig = &genai.GenerateContentConfig{Temperature: genai.Ptr[float32](0)}
-	// result, err := ai.aiClient.Models.GenerateContent(ctx, AI_MODEL, genai.Text(prompt), config)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// 	return "failed to get response from AI"
-	// }
+	var config *genai.GenerateContentConfig = &genai.GenerateContentConfig{Temperature: genai.Ptr[float32](0)}
+	result, err := ai.aiClient.Models.GenerateContent(ctx, ai.modelName, genai.Text(prompt), config)
+	if err != nil {
+		log.Fatal(err)
+		return "failed to get response from AI"
+	}
 
-	// return result.Text()
+	return result.Text()
 
-	return strings.TrimSpace(`
-### Feedback Summary
+	// 	return strings.TrimSpace(`
+	// ### Feedback Summary
 
-Your solution correctly implements the brute-force approach for the Two Sum problem.
+	// Your solution correctly implements the brute-force approach for the Two Sum problem.
 
----
+	// ---
 
-### ✅ What’s Good
-- The code is easy to read and well-indented.
-- You've handled the loop logic correctly and returned the correct indices.
+	// ### ✅ What’s Good
+	// - The code is easy to read and well-indented.
+	// - You've handled the loop logic correctly and returned the correct indices.
 
----
+	// ---
 
-### ⚠️ Suggestions for Improvement
+	// ### ⚠️ Suggestions for Improvement
 
-1. **Time Complexity**  
-   Your current solution has a time complexity of **O(n²)**. Consider using a **hash map** to reduce this to **O(n)**.
+	// 1. **Time Complexity**
+	//    Your current solution has a time complexity of **O(n²)**. Consider using a **hash map** to reduce this to **O(n)**.
 
-2. **Variable Naming**  
-   Consider using more descriptive names for clarity.
+	// 2. **Variable Naming**
+	//    Consider using more descriptive names for clarity.
 
----
+	// ---
 
-### 💡 Recommended Code
+	// ### 💡 Recommended Code
 
-` + "```" + `
-def two_sum(nums, target):
-    seen = {}
-    for i, num in enumerate(nums):
-        complement = target - num
-        if complement in seen:
-            return [seen[complement], i]
-        seen[num] = i
-` + "```" + `
+	// ` + "```" + `
+	// def two_sum(nums, target):
+	//     seen = {}
+	//     for i, num in enumerate(nums):
+	//         complement = target - num
+	//         if complement in seen:
+	//             return [seen[complement], i]
+	//         seen[num] = i
+	// ` + "```" + `
 
----
+	// ---
 
-✅ Passes basic test cases  
-⚠️ Could be optimized for performance
-`)
+	// ✅ Passes basic test cases
+	// ⚠️ Could be optimized for performance
+	// `)
 }

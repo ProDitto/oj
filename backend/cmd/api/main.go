@@ -9,9 +9,18 @@ import (
 )
 
 func main() {
-	redisService := NewRedisService(redisUrl)
+	if getEnvOrDefault("ENVIRONMENT", "DEV") != "PROD" {
+		LoadDotEnv()
+	}
 
-	postgres, err := NewPostgreSQLDB(dbUrl, maxIdleConns, maxOpenConns)
+	cfg, err := GetConfig()
+	if err != nil {
+		log.Fatal("Error loading the config: ", err)
+	}
+
+	redisService := NewRedisService(cfg.REDIS_URI)
+
+	postgres, err := NewPostgreSQLDB(cfg.DB_URI, maxIdleConns, maxOpenConns)
 	if err != nil {
 		log.Fatalf("Error initializing PostgreSQL: %v", err)
 	}
@@ -29,7 +38,7 @@ func main() {
 
 	srv := NewService(db, redisService)
 
-	aiClient, err := NewAI(ctx, *srv)
+	aiClient, err := NewAI(ctx, cfg.AI_API_KEY, *srv)
 	if err != nil {
 		log.Fatal("Error initializing AI Client : ", err)
 	}
@@ -92,7 +101,7 @@ func main() {
 
 	// Set up the server
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", serverPort),
+		Addr:    fmt.Sprintf(":%d", cfg.SERVER_PORT),
 		Handler: r,
 	}
 

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	migrate "oj-be/migrations"
 	"sort"
 	"strings"
 	"time"
@@ -26,6 +27,10 @@ type serviceImpl struct {
 
 func NewService(db *sql.DB, redis *RedisService) *serviceImpl {
 	return &serviceImpl{db: db, redis: redis, submissions: make([]Submission, 0)}
+}
+
+func (s *serviceImpl) ResetDB(ctx context.Context) error {
+	return migrate.ResetDB(s.db)
 }
 
 func (s *serviceImpl) Register(ctx context.Context, username, email, password string) (int, string, error) {
