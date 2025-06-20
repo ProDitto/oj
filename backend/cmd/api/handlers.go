@@ -15,10 +15,11 @@ import (
 type Handler struct {
 	service *serviceImpl
 	redis   *RedisService
+	ai      *AI
 }
 
-func NewHandler(service *serviceImpl, redis *RedisService) *Handler {
-	return &Handler{service: service, redis: redis}
+func NewHandler(service *serviceImpl, redis *RedisService, ai *AI) *Handler {
+	return &Handler{service: service, redis: redis, ai: ai}
 }
 
 func (h *Handler) Routes() http.Handler {
@@ -75,6 +76,9 @@ func (h *Handler) Routes() http.Handler {
 			admin.Post("/contest/{id}/end", h.EndContest)
 		})
 		protected.Get("/me", h.GetCurrentUserProfile)
+
+		// TODO: Add high rate limiter here
+		protected.Post("/feedback", h.AIFeedback)
 
 		protected.Post("/run", h.RunCode)
 		protected.Post("/submit", h.SubmitCode)
@@ -221,6 +225,7 @@ func (h *Handler) AddProblem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	h.ai.AddProblemExplanation(id)
 	json.NewEncoder(w).Encode(map[string]int{"id": id})
 }
 
@@ -235,6 +240,8 @@ func (h *Handler) UpdateProblem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	h.ai.AddProblemExplanation(id)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -552,4 +559,21 @@ func (h *Handler) AddCommentToDiscussion(w http.ResponseWriter, r *http.Request)
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]int{"id": id})
+}
+
+func (h *Handler) AIFeedback(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		ProblemID int
+		Code      string
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	feedback := h.ai.GetFeedback(r.Context(), payload.ProblemID, payload.Code)
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"Feedback": feedback})
 }

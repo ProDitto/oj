@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Discussion, DiscussionComment, Vote } from '../types';
+import type { Discussion, DiscussionComment, Vote, AddCommentPayload } from '../types';
 import { voteDiscussion, commentDiscussion } from '../api/endpoints';
 
 interface DiscussionsTabProps {
@@ -21,11 +21,10 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
     AuthorID: 0,
   });
 
-  const [activeCommentDiscussionID, setActiveCommentDiscussionID] = useState<number | null>(null);
   const [commentInput, setCommentInput] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [votingState, setVotingState] = useState<Record<number, boolean>>({}); // Voting button loading state
-  const [activeDiscussionID, setActiveDiscussionID] = useState(null);
+  const [activeDiscussionID, setActiveDiscussionID] = useState<number | null>(null);
 
 
   const handleInputChange = (
@@ -62,16 +61,6 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
     handleCloseModal();
   };
 
-  const toggleCommentInput = (discussionID: number) => {
-    if (activeCommentDiscussionID === discussionID) {
-      setActiveCommentDiscussionID(null);
-      setCommentInput('');
-    } else {
-      setActiveCommentDiscussionID(discussionID);
-      setCommentInput('');
-    }
-  };
-
   const handleAddComment = async (discussionID: number) => {
     const trimmed = commentInput.trim();
     if (!trimmed) return;
@@ -101,7 +90,6 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
 
       onUpdateDiscussion(updatedDiscussion);
       setCommentInput('');
-      setActiveCommentDiscussionID(null);
     } catch (err) {
       console.log("Error adding a commment: ", err)
     }
@@ -196,7 +184,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
                       className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded disabled:opacity-50"
                       disabled={votingState[discussion.ID]}
                     >
-                      👍 Upvote
+                      👍
                     </button>
                     <button
                       onClick={(e) => {
@@ -206,7 +194,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
                       className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50"
                       disabled={votingState[discussion.ID]}
                     >
-                      👎 Downvote
+                      👎
                     </button>
                   </div>
                 </div>

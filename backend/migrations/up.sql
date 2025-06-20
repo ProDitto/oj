@@ -36,6 +36,7 @@ CREATE TABLE problems (
     status problem_status NOT NULL DEFAULT 'draft',
     solution_language language,
     solution_code TEXT,
+    explanation TEXT,
     failure_reason TEXT
 );
 

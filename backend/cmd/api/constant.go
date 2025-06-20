@@ -17,6 +17,11 @@ const (
 
 	ContextUserIDKey CtxKey = "user_id"
 	ContextRoleKey   CtxKey = "user_role"
+
+	API_KEY              = "apiKey"
+	AI_MODEL             = "gemini-2.0-flash"
+	FEEDBACK_TEMPLATE    = "code:%s constraints:%s solution:%s"
+	EXPLANATION_TEMPLATE = "code:%s constraints:%s"
 )
 
 var jwtSecret = []byte("secret")

@@ -62,6 +62,7 @@ type ProblemDetail struct {
 	Status           ProblemStatus
 	SolutionLanguage Language
 	SolutionCode     string
+	Explanation      string
 	TestCases        []TestCase
 	Examples         []ProblemExample
 	Limits           []Limits

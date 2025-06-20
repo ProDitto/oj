@@ -19,7 +19,7 @@ type ProblemDetailsProps = {
   running: boolean
   submitting: boolean
   output: string
-  submissionDetails: Submission
+  submissionDetails: Submission | undefined
 }
 
 const ProblemDetails: React.FC<ProblemDetailsProps> = ({ problem, code, setCode, language, setLanguage, testCases, setTestCases, handleRun, handleSubmit, running, submitting, output, submissionDetails }) => {

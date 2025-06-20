@@ -24,14 +24,19 @@ func main() {
 
 	db := postgres.conn
 
-	srv := NewService(db, redisService)
-
-	h := NewHandler(srv, redisService)
-	// Set up the routes
-	r := h.Routes()
-
 	ctx, cancel := context.WithCancel(context.TODO())
 	defer cancel()
+
+	srv := NewService(db, redisService)
+
+	aiClient, err := NewAI(ctx, *srv)
+	if err != nil {
+		log.Fatal("Error initializing AI Client : ", err)
+	}
+
+	h := NewHandler(srv, redisService, aiClient)
+	// Set up the routes
+	r := h.Routes()
 
 	var wg sync.WaitGroup
 

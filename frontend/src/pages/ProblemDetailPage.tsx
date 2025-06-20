@@ -22,6 +22,7 @@ import type {
 } from '../types';
 import DiscussionsTab from '../components/DiscussionsTab';
 import ProblemDetails from '../components/ProblemDetails';
+import FeedbackTab from '../components/FeedbackTab';
 import clsx from 'clsx';
 
 const ProblemDetailPage: React.FC = () => {
@@ -100,13 +101,13 @@ const ProblemDetailPage: React.FC = () => {
         if (!result.Results) {
           result.Results = [{
             ID: 1,
-            Status: result.Message,
+            Status: result.Status,
             StdOut: "",
             StdErr: "",
             RuntimeMS: 0,
             MemoryKB: 0,
           }]
-        } 
+        }
         if (result && result.Status !== 'pending') {
           clearInterval(intervalId);
           currentRunId.current = 0;
@@ -158,7 +159,7 @@ const ProblemDetailPage: React.FC = () => {
 
   const handleCreateDiscussion = async (newDiscussion: Discussion) => {
     try {
-      const response = await createDiscussion({ ...newDiscussion, ID: problem?.ID+0 });
+      const response = await createDiscussion({ ...newDiscussion, ID: problem?.ID ? problem.ID : 0 });
       setDiscussions([...discussions, { ...newDiscussion, ID: response.data.id }]);
     } catch (error) {
       console.error('Error creating discussion:', error);
@@ -178,7 +179,7 @@ const ProblemDetailPage: React.FC = () => {
 
   const handleVoteDiscussion = async (discussionId: number, voteType: number) => {
     try {
-      await voteDiscussion({ DiscussionID: discussionId, Vote: voteType>0 ? +1 : -1 });
+      await voteDiscussion({ DiscussionID: discussionId, Vote: voteType > 0 ? +1 : -1 });
       setDiscussions(prev =>
         prev.map(d =>
           d.ID === discussionId
@@ -197,7 +198,7 @@ const ProblemDetailPage: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
       <div className="flex space-x-4 border-b-2 pb-2">
-        {['Problem', 'Discussions'].map((label, idx) => (
+        {['Problem', 'Discussions', 'Feedback'].map((label, idx) => (
           <button
             key={label}
             className={clsx(
@@ -229,19 +230,19 @@ const ProblemDetailPage: React.FC = () => {
           output={output}
           submissionDetails={submissionDetails}
         />
+      ) : activeTab === 1 ? (
+        isDiscussionsLoading ? (
+          <p>Loading discussions...</p>
+        ) : (
+          <DiscussionsTab
+            discussions={discussions}
+            onCreateDiscussion={handleCreateDiscussion}
+            onUpdateDiscussion={handleUpdateDiscussion}
+          // onVoteDiscussion={handleVoteDiscussion}
+          />
+        )
       ) : (
-        <div>
-          {isDiscussionsLoading ? (
-            <p>Loading discussions...</p>
-          ) : (
-            <DiscussionsTab
-              discussions={discussions}
-              onCreateDiscussion={handleCreateDiscussion}
-              onUpdateDiscussion={handleUpdateDiscussion}
-              onVoteDiscussion={handleVoteDiscussion}
-            />
-          )}
-        </div>
+        <FeedbackTab problemID={problem.ID} code={code} />
       )}
     </div>
   );

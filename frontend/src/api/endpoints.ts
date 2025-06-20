@@ -15,7 +15,9 @@ import type {
     ContestParticipant,
     Discussion,
     AddVotePayload,
+    AddCommentPayload,
 } from '../types';
+import type { number } from 'framer-motion';
 
 // Auth
 export const signup = (data: SignupPayload) =>
@@ -113,3 +115,6 @@ export const voteDiscussion = (data: AddVotePayload) =>
 
 export const commentDiscussion = (data: AddCommentPayload) =>
     axios.post<IdResponse>('/discussion/comment', data);
+
+export const aiFeedback = (ProblemID: number, Code: string) =>
+    axios.post<{ Feedback: string }>(`/feedback`, { ProblemID, Code });

@@ -334,6 +334,30 @@ func (s *serviceImpl) AdminGetProblems(ctx context.Context) ([]ProblemInfo, erro
 	return problems, nil
 }
 
+func (s *serviceImpl) GetProblemForAIByID(ctx context.Context, problemID int) (*ProblemDetail, error) {
+	const problemQuery = `
+		SELECT description, constraints, solution_code, explanation
+		FROM problems WHERE id = $1;
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, maxQueryTime)
+	defer cancel()
+
+	var pd ProblemDetail
+	var constraints *string
+	err := s.db.QueryRowContext(ctx, problemQuery, problemID).Scan(
+		&pd.Description, &constraints, &pd.Explanation,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get problem by slug: %w", err)
+	}
+	if constraints != nil && len(*constraints) > 0 {
+		pd.Constraints = append(pd.Constraints, *constraints)
+	}
+
+	return &pd, nil
+}
+
 func (s *serviceImpl) GetProblemBySlug(ctx context.Context, slug string) (*ProblemDetail, error) {
 	const problemQuery = `
 		SELECT id, title, description, constraints, difficulty, author_id, status, failure_reason
@@ -364,8 +388,6 @@ func (s *serviceImpl) GetProblemBySlug(ctx context.Context, slug string) (*Probl
 
 	// Limits
 	_ = s.loadLimits(ctx, &pd)
-
-	fmt.Println("Test casees:", pd.TestCases)
 
 	return &pd, nil
 }
@@ -1319,6 +1341,19 @@ func (s *serviceImpl) UpdateProblemStatus(ctx context.Context, problemID int, st
 		WHERE id = $1;
 	`
 	_, err := s.db.ExecContext(ctx, query, problemID, status)
+	if err != nil {
+		return fmt.Errorf("failed to update problem status: %w", err)
+	}
+	return nil
+}
+
+func (s *serviceImpl) UpdateProblemExplanation(ctx context.Context, problemID int, explanation string) error {
+	const query = `
+		UPDATE problems
+		SET explanation = $2
+		WHERE id = $1;
+	`
+	_, err := s.db.ExecContext(ctx, query, problemID, explanation)
 	if err != nil {
 		return fmt.Errorf("failed to update problem status: %w", err)
 	}
