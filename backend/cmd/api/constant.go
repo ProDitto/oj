@@ -5,8 +5,8 @@ type CtxKey string
 const (
 	defaultTimeLimitMS   = 2000   // 2 seconds
 	defaultMemoryLimitKB = 65536  // 64 MB
-	maxTimeLimitMS       = 5000   // Max 5 seconds
-	maxMemoryLimitKB     = 131072 // Max 128 MB
+	maxTimeLimitMS       = 5000   // Max 3 seconds
+	maxMemoryLimitKB     = 131072 // Max 50 MB
 	AuthCookieName       = "auth_token"
 	// serverPort           = 8080
 	// redisUrl             = ""

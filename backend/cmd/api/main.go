@@ -38,7 +38,7 @@ func main() {
 
 	srv := NewService(db, redisService)
 
-	aiClient, err := NewAI(ctx, cfg.AI_API_KEY, *srv)
+	aiClient, err := NewAI(ctx, cfg.AI_API_KEY, *srv, cfg.AI_MODEL_NAME, cfg.FEEDBACK_TEMPLATE, cfg.EXPLANATION_TEMPLATE)
 	if err != nil {
 		log.Fatal("Error initializing AI Client : ", err)
 	}
@@ -85,17 +85,21 @@ func main() {
 		} else if er.ExecutionType == EXECUTION_VALIDATE {
 			log.Println("\n\n\nResponse:")
 			log.Println(er)
-			var problemStatus ProblemStatus = "active"
+			var problemStatus ProblemStatus = PROBLEM_STATUS_ACTIVE
 			for _, res := range er.Results {
-				if res.Status != "accepted" {
-					problemStatus = "rejected"
+				log.Println(res.Status)
+				log.Println(res.Output)
+				if res.Status != string(SUBMISSION_STATUS_ACCEPTED) {
+					problemStatus = PROBLEM_STATUS_REJECTED
 				}
 			}
 			log.Println("Status : ", problemStatus, er.ProblemID, er.SubmissionID)
 			err := srv.UpdateProblemStatus(ctx, er.SubmissionID, problemStatus)
-			if err != nil {
+			if err != nil || problemStatus != PROBLEM_STATUS_ACTIVE {
 				log.Println(err)
+				return
 			}
+			aiClient.AddProblemExplanation(er.SubmissionID)
 		}
 	}, &wg)
 

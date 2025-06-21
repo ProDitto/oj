@@ -66,8 +66,9 @@ export interface ProblemDetail {
 export interface TestResult {
     ID: number;
     Status: string;
-    StdOut: string;
-    StdErr: string;
+    Input: string;
+    ExpectedOutput: string;
+    Output: string;
     RuntimeMS: number;
     MemoryKB: number;
 }

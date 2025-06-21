@@ -9,7 +9,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o app ./...
+RUN go build -o app ./cmd/...
 
 FROM alpine:latest
 
@@ -18,7 +18,7 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 COPY --from=builder /app/app .
-COPY --from=builder /app/migrations .
+COPY --from=builder /app/migrations/*.sql .
 
 EXPOSE 8080
 

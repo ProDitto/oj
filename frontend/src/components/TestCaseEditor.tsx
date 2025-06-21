@@ -45,9 +45,9 @@ const TestCaseEditor: React.FC<TestCaseEditorProps> = ({
 
     useEffect(() => {
         if (testResults) {
-            setViewMode("results")
+            setViewMode("results");
         }
-    }, [testResults])
+    }, [testResults]);
 
     return (
         <div className="border rounded-lg p-4 bg-white shadow-sm">
@@ -70,33 +70,47 @@ const TestCaseEditor: React.FC<TestCaseEditorProps> = ({
             </div>
 
             {/* Tabs */}
-            {(viewMode === 'edit' ? testCases : testResults)?.length > 0 && (
+            {(viewMode === 'edit' ? testCases : testResults!)?.length > 0 && (
                 <div className="mb-4 border-b border-gray-200">
                     <div className="flex flex-wrap gap-2">
-                        {(viewMode === 'edit' ? testCases : testResults)?.map((_, idx) => (
-                            <button
-                                key={idx}
-                                type="button"
-                                onClick={() => setActiveTab(idx)}
-                                className={`flex items-center px-3 py-2 rounded-t border-b-2 ${activeTab === idx
-                                    ? 'border-blue-500 text-blue-600 font-medium'
-                                    : 'border-transparent text-gray-600 hover:bg-gray-100'
+                        {(viewMode === 'edit' ? testCases : testResults)?.map((item, idx) => {
+                            const status = viewMode === 'results' ? testResults?.[idx]?.Status : null;
+                            const dotColor =
+                                status === 'accepted'
+                                    ? 'bg-green-500'
+                                    : status
+                                    ? 'bg-red-500'
+                                    : 'bg-gray-300';
+
+                            return (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => setActiveTab(idx)}
+                                    className={`flex items-center px-3 py-2 rounded-t border-b-2 ${
+                                        activeTab === idx
+                                            ? 'border-blue-500 text-blue-600 font-medium'
+                                            : 'border-transparent text-gray-600 hover:bg-gray-100'
                                     }`}
-                            >
-                                Case {idx + 1}
-                                {viewMode === 'edit' && testCases.length > 1 && (
+                                >
                                     <span
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            removeTestCase(idx);
-                                        }}
-                                        className="ml-2 text-red-400 hover:text-red-600 transition-colors"
-                                    >
-                                        <Trash2 size={14} />
-                                    </span>
-                                )}
-                            </button>
-                        ))}
+                                        className={`w-2 h-2 rounded-full mr-2 ${viewMode === 'results' ? dotColor : 'hidden'}`}
+                                    />
+                                    Case {idx + 1}
+                                    {viewMode === 'edit' && testCases.length > 1 && (
+                                        <span
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeTestCase(idx);
+                                            }}
+                                            className="ml-2 text-red-400 hover:text-red-600 transition-colors"
+                                        >
+                                            <Trash2 size={14} />
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -152,24 +166,49 @@ const TestCaseEditor: React.FC<TestCaseEditorProps> = ({
                 )
             ) : testResults && testResults.length > 0 ? (
                 <div className="space-y-4">
-                    <div className="bg-gray-50 p-4 rounded border">
-                        <p><strong>Status:</strong> {testResults[activeTab]?.Status}</p>
-                        <p><strong>Runtime:</strong> {testResults[activeTab]?.RuntimeMS} ms</p>
-                        <p><strong>Memory:</strong> {testResults[activeTab]?.MemoryKB} KB</p>
-
-                        <div className="mt-3">
-                            <p className="font-medium">StdOut:</p>
-                            <pre className="bg-white border p-2 rounded text-sm whitespace-pre-wrap">{testResults[activeTab]?.StdOut}</pre>
+                    <div className="bg-gray-50 p-4 rounded border space-y-3">
+                        <div>
+                            <p className="text-sm text-gray-500">Status</p>
+                            <p
+                                className={`text-lg font-semibold ${
+                                    testResults[activeTab]?.Status === 'accepted'
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                }`}
+                            >
+                                {testResults[activeTab]?.Status || 'Unknown'}
+                            </p>
                         </div>
 
-                        {testResults[activeTab]?.StdErr && (
-                            <div className="mt-3">
-                                <p className="font-medium text-red-600">StdErr:</p>
-                                <pre className="bg-red-100 border border-red-300 text-red-800 p-2 rounded text-sm whitespace-pre-wrap">
-                                    {testResults[activeTab]?.StdErr}
-                                </pre>
+                        <div>
+                            <p className="text-sm font-medium text-gray-700">Input</p>
+                            <pre className="bg-white border p-2 rounded text-sm font-mono whitespace-pre-wrap">
+                                {testResults[activeTab]?.Input}
+                            </pre>
+                        </div>
+
+                        <div>
+                            <p className="text-sm font-medium text-gray-700">Expected Output</p>
+                            <pre className="bg-white border p-2 rounded text-sm font-mono whitespace-pre-wrap">
+                                {testResults[activeTab]?.ExpectedOutput}
+                            </pre>
+                        </div>
+
+                        <div>
+                            <p className="text-sm font-medium text-gray-700">Your Output</p>
+                            <pre className="bg-white border p-2 rounded text-sm font-mono whitespace-pre-wrap">
+                                {testResults[activeTab]?.Output}
+                            </pre>
+                        </div>
+
+                        <div className="flex gap-6 text-sm text-gray-600">
+                            <div>
+                                <span className="font-medium">Runtime:</span> {testResults[activeTab]?.RuntimeMS} ms
                             </div>
-                        )}
+                            <div>
+                                <span className="font-medium">Memory:</span> {testResults[activeTab]?.MemoryKB} KB
+                            </div>
+                        </div>
                     </div>
                 </div>
             ) : (

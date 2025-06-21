@@ -514,6 +514,9 @@ func main() {
 	log.Println("👷 Worker service starting...")
 
 	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup

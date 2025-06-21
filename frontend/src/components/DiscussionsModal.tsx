@@ -7,6 +7,7 @@ import {
   getDiscussions,
 } from '../api/endpoints';
 import type { Discussion, AddVotePayload, Vote } from '../types';
+import { toast } from 'react-toastify';
 
 interface Props {
   problemID: number;
@@ -33,7 +34,7 @@ const DiscussionModal: React.FC<Props> = ({ problemID, isOpen, onClose }) => {
     try {
       const { data } = await getDiscussions(problemID); // assumes this returns an array
       setDiscussions(Array.isArray(data) ? data : [data]); // support single discussion fallback
-    } catch {
+    } catch (err) {
       setDiscussions([]);
     }
   };

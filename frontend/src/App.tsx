@@ -9,42 +9,24 @@ import ContestProblemPage from "./pages/ContestProblemPage";
 import AdminProblemPage from "./pages/AdminProblemPage";
 import ProblemForm from "./components/admin/ProblemForm";
 import Navbar from "./components/Navbar";
-import { useEffect, useState } from "react";
-import { getCurrentUser } from "./api/endpoints";
-import type { User } from "./types";
 import UserProfile from "./pages/UserProfile";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
-  const [user, setUser] = useState<User>()
-
-  const getCurrentUserProfile = async () => {
-    try {
-      const res = await getCurrentUser();
-      setUser(res.data)
-    } catch (err) {
-      console.log("Error: ", err)
-      setUser(undefined)
-      // setServerError(err.response?.data?.message || 'Something went wrong.');
-    }
-  };
-
-  useEffect(() => {
-    getCurrentUserProfile();
-  }, [])
-
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50 text-gray-900">
-        <Navbar user={user} getUserProfile={getCurrentUserProfile} />
+        <ToastContainer />
+        <Navbar />
         <Routes>
           <Route path="/" element={<Navigate to="/problems" />} />
-          <Route path="/auth" element={<AuthPage getUserProfile={getCurrentUserProfile} />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/problems" element={<ProblemListPage />} />
           <Route path="/problem/:slug" element={<ProblemDetailPage />} />
           <Route path="/contests" element={<ContestListPage />} />
           <Route path="/contest/:contestId/problem/:slug" element={<ContestProblemPage />} />
           <Route path="/contest/:contestId" element={<ContestDetailPage />} />
-          {/* <Route path="/add-problem" element={<AddProblemPage />} /> */}
           <Route path="/profile/:username" element={<UserProfile />} />
           <Route path="/admin/problems" element={<AdminProblemPage />} />
           <Route path="/admin/problems/new" element={<ProblemForm />} />

@@ -349,15 +349,18 @@ func (s *serviceImpl) GetProblemForAIByID(ctx context.Context, problemID int) (*
 	defer cancel()
 
 	var pd ProblemDetail
-	var constraints *string
+	var constraints, explanation *string
 	err := s.db.QueryRowContext(ctx, problemQuery, problemID).Scan(
-		&pd.Description, &constraints, &pd.Explanation,
+		&pd.Description, &constraints, &pd.SolutionCode, &explanation,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get problem by slug: %w", err)
+		return nil, fmt.Errorf("failed to get problem by ID: %w", err)
 	}
 	if constraints != nil && len(*constraints) > 0 {
 		pd.Constraints = append(pd.Constraints, *constraints)
+	}
+	if explanation != nil && len(*explanation) > 0 {
+		pd.Explanation = *explanation
 	}
 
 	return &pd, nil
@@ -379,6 +382,9 @@ func (s *serviceImpl) GetProblemBySlug(ctx context.Context, slug string) (*Probl
 		&pd.AuthorID, &pd.Status, &pd.FailureReason,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("problem not found")
+		}
 		return nil, fmt.Errorf("failed to get problem by slug: %w", err)
 	}
 	if constraints != nil && len(*constraints) > 0 {
@@ -1312,7 +1318,7 @@ func (s *serviceImpl) GetDiscussionsByProblem(ctx context.Context, problemID int
 	return discussions, nil
 }
 
-func (s *serviceImpl) AddVoteToDiscussion(ctx context.Context, userID, discussionID int, vote Vote) error {
+func (s *serviceImpl) AddVoteToDiscussion(ctx context.Context, userID, discussionID int, vote Vote) (int, error) {
 	const query = `
 	INSERT INTO discussion_votes (user_id, discussion_id, vote)
 	VALUES ($1, $2, $3)
@@ -1321,9 +1327,19 @@ func (s *serviceImpl) AddVoteToDiscussion(ctx context.Context, userID, discussio
 
 	_, err := s.db.ExecContext(ctx, query, userID, discussionID, int(vote))
 	if err != nil {
-		return fmt.Errorf("failed to vote on discussion: %w", err)
+		return 0, fmt.Errorf("failed to vote on discussion: %w", err)
 	}
-	return nil
+
+	const fetchVotes = `
+	SELECT sum(vote) FROM discussion_votes where discussion_id=$1
+	group by discussion_id;
+	`
+	votes := 0
+	err = s.db.QueryRowContext(ctx, fetchVotes, discussionID).Scan(&votes)
+	if err != nil {
+		return 0, fmt.Errorf("failed to fetch votes on discussion: %w", err)
+	}
+	return votes, nil
 }
 
 func (s *serviceImpl) AddCommentToDiscussion(ctx context.Context, userID int, payload AddCommentPayload) (int, error) {

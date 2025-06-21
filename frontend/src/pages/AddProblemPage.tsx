@@ -147,12 +147,12 @@ const AddProblemPage: React.FC = () => {
                     <label className="block font-medium">Test Cases</label>
                     {testCases.map((field, index) => (
                         <div key={field.id} className="grid grid-cols-2 gap-2 mb-2">
-                            <input
+                            <textarea
                                 placeholder="Input"
                                 {...register(`TestCases.${index}.Input`)}
                                 className="border p-1 rounded"
                             />
-                            <input
+                            <textarea
                                 placeholder="Expected Output"
                                 {...register(`TestCases.${index}.ExpectedOutput`)}
                                 className="border p-1 rounded"

@@ -1,15 +1,11 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { logout } from "../api/endpoints"
-import type { User } from '../types';
+import { useUser } from '../contexts/UserContext';
 
-type NavbarProps = {
-    user: User | undefined;
-    getUserProfile: () => void;
-};
-
-const Navbar: React.FC<NavbarProps> = ({ user, getUserProfile }) => {
+const Navbar: React.FC = () => {
     const navigate = useNavigate();
+    const { user, getCurrentUserProfile } = useUser();
 
     const handleLogout = () => {
         ; (
@@ -18,7 +14,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, getUserProfile }) => {
                 console.log('Logging out...');
                 try {
                     await logout();
-                    getUserProfile();
+                    getCurrentUserProfile();
                     navigate('/problems');
                 } catch (err) {
                     console.log("Error: ", err)

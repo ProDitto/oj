@@ -412,15 +412,15 @@ export const ExampleForm: React.FC<{
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
                   <div>
                     <p className="text-sm font-medium">Input:</p>
-                    <p className="text-sm mt-1 p-2 bg-gray-50 rounded font-mono">{example.Input}</p>
+                    <textarea className="text-sm mt-1 p-2 bg-gray-50 rounded font-mono">{example.Input}</textarea>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Output:</p>
-                    <p className="text-sm mt-1 p-2 bg-gray-50 rounded font-mono">{example.ExpectedOutput}</p>
+                    <textarea className="text-sm mt-1 p-2 bg-gray-50 rounded font-mono">{example.ExpectedOutput}</textarea>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Explanation:</p>
-                    <p className="text-sm mt-1 p-2 bg-gray-50 rounded">{example.Explanation || '-'}</p>
+                    <textarea className="text-sm mt-1 p-2 bg-gray-50 rounded">{example.Explanation || '-'}</textarea>
                   </div>
                 </div>
                 <button

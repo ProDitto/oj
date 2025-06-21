@@ -5,11 +5,13 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/httprate"
 )
 
 type Handler struct {
@@ -40,6 +42,7 @@ func (h *Handler) Routes() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(httprate.LimitByIP(100, time.Minute))
 
 	r.Get("/health", h.Health)
 	r.Post("/signup", h.Signup)
@@ -63,8 +66,7 @@ func (h *Handler) Routes() http.Handler {
 	r.Group(func(protected chi.Router) {
 		protected.Use(AuthMiddleware)
 
-		r.Group(func(admin chi.Router) {
-			admin.Use(AuthMiddleware)
+		protected.Group(func(admin chi.Router) {
 			admin.Use(AdminOnlyMiddleware)
 
 			admin.Get("/problem-list/{slug}", h.AdminGetProblemBySlug)
@@ -80,11 +82,18 @@ func (h *Handler) Routes() http.Handler {
 		})
 		protected.Get("/me", h.GetCurrentUserProfile)
 
-		// TODO: Add high rate limiter here
-		protected.Post("/feedback", h.AIFeedback)
+		protected.Route("/", func(slow chi.Router) {
+			slow.Use(httprate.Limit(
+				2,
+				5*time.Second,
+				httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
+			))
 
-		protected.Post("/run", h.RunCode)
-		protected.Post("/submit", h.SubmitCode)
+			slow.Post("/run", h.RunCode)
+			slow.Post("/submit", h.SubmitCode)
+
+			slow.Post("/feedback", h.AIFeedback)
+		})
 
 		protected.Get("/submissions/{problemID}", h.GetUserSubmissions)
 		protected.Get("/run/{runID}", h.GetRunResult)
@@ -231,7 +240,7 @@ func (h *Handler) AddProblem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	h.ai.AddProblemExplanation(id)
+	// h.ai.AddProblemExplanation(id)
 	json.NewEncoder(w).Encode(map[string]int{"id": id})
 }
 
@@ -247,7 +256,7 @@ func (h *Handler) UpdateProblem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.ai.AddProblemExplanation(id)
+	// h.ai.AddProblemExplanation(id)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -259,6 +268,11 @@ func (h *Handler) RunCode(w http.ResponseWriter, r *http.Request) {
 	var payload RunCodePayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if strings.TrimSpace(payload.Code) == "" {
+		http.Error(w, "empty code provided", http.StatusBadRequest)
 		return
 	}
 
@@ -290,6 +304,11 @@ func (h *Handler) SubmitCode(w http.ResponseWriter, r *http.Request) {
 	var sub SubmissionPayload
 	if err := json.NewDecoder(r.Body).Decode(&sub); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if strings.TrimSpace(sub.Code) == "" {
+		http.Error(w, "empty code provided", http.StatusBadRequest)
 		return
 	}
 
@@ -419,7 +438,7 @@ func (h *Handler) StartContest(w http.ResponseWriter, r *http.Request) {
 	for _, problem := range contest.Problems {
 		key := GetContestProblemKey(contestID, problem.ID)
 		value := CachePoints{Points: problem.MaxPoints}
-		err := h.redis.Set(r.Context(), key, value, 4*time.Hour)
+		err := h.redis.Set(r.Context(), key, value, time.Minute)
 		if err != nil {
 			// Log the error but continue processing other problems
 			// log.Printf("Failed to cache problem %d: %v", problem.ID, err)
@@ -535,12 +554,14 @@ func (h *Handler) AddVoteToDiscussion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.AddVoteToDiscussion(r.Context(), userID, payload.DiscussionID, payload.Vote); err != nil {
+	vote, err := h.service.AddVoteToDiscussion(r.Context(), userID, payload.DiscussionID, payload.Vote)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]int{"id": vote})
 }
 
 func (h *Handler) AddCommentToDiscussion(w http.ResponseWriter, r *http.Request) {

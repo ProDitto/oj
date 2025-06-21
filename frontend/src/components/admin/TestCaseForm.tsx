@@ -32,8 +32,7 @@ const TestCaseForm: React.FC<TestCaseFormProps> = ({ testCases, setTestCases }) 
             <div className="grid grid-cols-2 gap-4 items-end">
                 <div>
                     <label className="block text-xs text-gray-500 mb-1">Input</label>
-                    <input
-                        type="text"
+                    <textarea
                         className="w-full px-3 py-2 border rounded-md shadow-sm"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
@@ -42,8 +41,7 @@ const TestCaseForm: React.FC<TestCaseFormProps> = ({ testCases, setTestCases }) 
                 </div>
                 <div>
                     <label className="block text-xs text-gray-500 mb-1">Expected Output</label>
-                    <input
-                        type="text"
+                    <textarea
                         className="w-full px-3 py-2 border rounded-md shadow-sm"
                         value={expectedOutput}
                         onChange={(e) => setExpectedOutput(e.target.value)}

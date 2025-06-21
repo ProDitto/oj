@@ -6,10 +6,11 @@ import remarkGfm from 'remark-gfm';
 interface FeedbackTabProps {
     problemID: number;
     code: string;
+    feedback: string;
+    setFeedback: (feedback: string) => void
 }
 
-const FeedbackTab: React.FC<FeedbackTabProps> = ({ problemID, code }) => {
-    const [feedback, setFeedback] = useState<string>("");
+const FeedbackTab: React.FC<FeedbackTabProps> = ({ problemID, code, feedback, setFeedback }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasFetched, setHasFetched] = useState(false);

@@ -12,26 +12,30 @@ services:
     container_name: online_judge_backend
     restart: always
     environment:
-      SERVER_PORT: ":8080"
-      DB_URI: "postgresql://postgres:postgres@online_judge_db:5432/postgres?sslmode=disable"
-      MAX_IDLE_CONNS: 20
-      MAX_OPEN_CONNS: 10
+      SERVER_PORT: "8080"
+      REDIS_URI: "redis:6379"
+      DB_URI: "postgresql://postgres:postgres@db:5432/postgres?sslmode=disable"
+      AI_API_KEY: "###-SCRATCH-HERE-TO-REVEAL-###"
+      AI_MODEL_NAME: "gemini-2.0-flash"
+      FEEDBACK_TEMPLATE: "code:%s constraints:%s solution:%s"
+      EXPLANATION_TEMPLATE: "code:%s constraints:%s"
+
       ENVIRONMENT: PRODUCTION
     ports:
       - "8080:8080"
 
-  online_judge_frontend:
-    build:
-      context: ./frontend
-      # dockerfile: Dockerfile
-    container_name: frontend
-    restart: always
-    ports:
-      - "80:80"
-    depends_on:
-      - online_judge_backend
-    environment:
-      VITE_BACKEND_URL: "https://online_judge_backend:8080/api/v1"
+  # online_judge_frontend:
+  #   build:
+  #     context: ./frontend
+  #     # dockerfile: Dockerfile
+  #   container_name: frontend
+  #   restart: always
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - online_judge_backend
+  #   environment:
+  #     VITE_BACKEND_URL: "https://online_judge_backend:8080/api/v1"
 
   # online_judge_db:
   db:
@@ -46,6 +50,16 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  
+  worker:
+    build:
+      context: ./execution_service  # or the directory where your worker Dockerfile lives
+      dockerfile: Dockerfile  # or a custom Dockerfile name if separate
+    container_name: worker
+    environment:
+      REDIS_ADDR: redis:6379
+    depends_on:
+      - redis
 
 volumes:
   postgres_data:

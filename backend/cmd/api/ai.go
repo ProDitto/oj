@@ -18,7 +18,7 @@ type AI struct {
 	modelName           string
 }
 
-func NewAI(ctx context.Context, apiKey string, service serviceImpl) (*AI, error) {
+func NewAI(ctx context.Context, apiKey string, service serviceImpl, modelName, feedbackTemplate, explanationTemplate string) (*AI, error) {
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{
 		APIKey:  apiKey,
 		Backend: genai.BackendGeminiAPI,
@@ -27,9 +27,21 @@ func NewAI(ctx context.Context, apiKey string, service serviceImpl) (*AI, error)
 		return nil, err
 	}
 
+	for model, err := range client.Models.All(ctx) {
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Model:", model.Name)
+	}
+
+	// log.Println(testResponse(ctx, modelName, client))
+
 	return &AI{
-		aiClient: client,
-		service:  service,
+		aiClient:            client,
+		service:             service,
+		explanationTemplate: explanationTemplate,
+		feedbackTemplate:    feedbackTemplate,
+		modelName:           modelName,
 	}, nil
 }
 
@@ -39,11 +51,13 @@ func (ai *AI) AddProblemExplanation(problemID int) {
 
 	problem, err := ai.service.GetProblemForAIByID(ctx, problemID)
 	if err != nil {
-		log.Println("[-] Error fetching problem for AI")
+		log.Println("[-] Error fetching problem for AI: ", err)
 		return
 	}
 
 	prompt := fmt.Sprintf(ai.explanationTemplate, problem.SolutionCode, problem.Constraints[0])
+
+	log.Println("Prompt : ", prompt)
 
 	var config *genai.GenerateContentConfig = &genai.GenerateContentConfig{Temperature: genai.Ptr[float32](0)}
 	result, err := ai.aiClient.Models.GenerateContent(ctx, ai.modelName, genai.Text(prompt), config)
@@ -52,7 +66,11 @@ func (ai *AI) AddProblemExplanation(problemID int) {
 		return
 	}
 
-	err = ai.service.UpdateProblemExplanation(ctx, problemID, result.Text())
+	explanation := result.Text()
+
+	log.Println("Explanation received: ", explanation)
+
+	err = ai.service.UpdateProblemExplanation(ctx, problemID, explanation)
 	if err != nil {
 		log.Println("Error updating explanation : ", err)
 	}
@@ -65,6 +83,7 @@ func (ai *AI) GetFeedback(ctx context.Context, problemID int, code string) strin
 
 	problem, err := ai.service.GetProblemForAIByID(ctx, problemID)
 	if err != nil {
+		log.Println("Error fetching problem for AI : ", err)
 		return "invalid problem"
 	}
 
@@ -119,4 +138,18 @@ func (ai *AI) GetFeedback(ctx context.Context, problemID int, code string) strin
 	// ✅ Passes basic test cases
 	// ⚠️ Could be optimized for performance
 	// `)
+}
+
+// TODO: remove this
+func testResponse(ctx context.Context, modelName string, client *genai.Client) string {
+	prompt := "explain quantum mechanics like I'm five."
+
+	var config *genai.GenerateContentConfig = &genai.GenerateContentConfig{Temperature: genai.Ptr[float32](0)}
+	result, err := client.Models.GenerateContent(ctx, modelName, genai.Text(prompt), config)
+	if err != nil {
+		log.Fatal(err)
+		return "failed to get response from AI"
+	}
+
+	return result.Text()
 }

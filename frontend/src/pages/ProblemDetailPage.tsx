@@ -24,6 +24,8 @@ import DiscussionsTab from '../components/DiscussionsTab';
 import ProblemDetails from '../components/ProblemDetails';
 import FeedbackTab from '../components/FeedbackTab';
 import clsx from 'clsx';
+import { toast } from 'react-toastify';
+import { AxiosError } from 'axios';
 
 const ProblemDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -40,6 +42,7 @@ const ProblemDetailPage: React.FC = () => {
   const [submissionDetails, setSubmissionDetails] = useState<Submission | undefined>();
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [isDiscussionsLoading, setIsDiscussionsLoading] = useState(true);
+  const [feedback, setFeedback] = useState("");
 
   const currentRunId = useRef<number>(0);
 
@@ -135,6 +138,14 @@ const ProblemDetailPage: React.FC = () => {
       const res = await runCode(payload);
       pollForResults(res.data.run_id);
     } catch (error) {
+      if (error instanceof AxiosError) {
+        toast(error.response?.data || "unknown error", {
+          type: 'error',
+          // duration: 5000,
+          delay: 5000,
+          position: 'bottom-right',
+        })
+      }
       console.error('Error running code:', error);
     }
   };
@@ -242,7 +253,7 @@ const ProblemDetailPage: React.FC = () => {
           />
         )
       ) : (
-        <FeedbackTab problemID={problem.ID} code={code} />
+        <FeedbackTab problemID={problem.ID} code={code} feedback={feedback} setFeedback={setFeedback} />
       )}
     </div>
   );

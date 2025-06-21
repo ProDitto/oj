@@ -5,15 +5,13 @@ import { useForm } from 'react-hook-form';
 import { signup, login } from '../api/endpoints';
 import type { SignupPayload, LoginPayload } from '../types';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 
-type AuthPageProps = {
-    getUserProfile: () => void
-}
-
-const AuthPage: React.FC<AuthPageProps> = ({ getUserProfile }) => {
+const AuthPage: React.FC = () => {
     const [isSignup, setIsSignup] = useState(false);
     const [serverError, setServerError] = useState('');
     const navigate = useNavigate();
+    const { getCurrentUserProfile } = useUser();
 
     const {
         register,
@@ -38,7 +36,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ getUserProfile }) => {
                 await login(loginData);
                 navigate('/problems');
             }
-            getUserProfile();
+            getCurrentUserProfile();
         } catch (err) {
             console.log("Error: ", err)
             // setServerError(err.response?.data?.message || 'Something went wrong.');

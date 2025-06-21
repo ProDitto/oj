@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import type { Discussion, DiscussionComment, Vote, AddCommentPayload } from '../types';
 import { voteDiscussion, commentDiscussion } from '../api/endpoints';
+import { useUser } from '../contexts/UserContext';
+import { useNavigate } from 'react-router-dom';
 
 interface DiscussionsTabProps {
   discussions: Discussion[];
@@ -25,7 +27,12 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
   const [errorMessage, setErrorMessage] = useState('');
   const [votingState, setVotingState] = useState<Record<number, boolean>>({}); // Voting button loading state
   const [activeDiscussionID, setActiveDiscussionID] = useState<number | null>(null);
+  const { user } = useUser();
+  const navigate = useNavigate();
 
+  const handleLoginRedirect = () => {
+    navigate('/auth');
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -69,6 +76,9 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
     if (!target) return;
 
     try {
+      if (!user) {
+        return
+      }
 
       const payload: AddCommentPayload = {
         DiscussionID: discussionID,
@@ -80,7 +90,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
       const newComment: DiscussionComment = {
         ID: response?.data?.id || Date.now(),
         Content: trimmed,
-        AuthorID: 1,
+        AuthorID: user.ID,
       };
 
       const updatedDiscussion: Discussion = {
@@ -101,20 +111,15 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
     const target = discussions.find(d => d.ID === discussionID);
     if (!target) return;
 
-    const updatedVotes = target.Votes + vote;
-
-    const updatedDiscussion: Discussion = {
-      ...target,
-      Votes: updatedVotes,
-    };
-
-    onUpdateDiscussion(updatedDiscussion);
-
     try {
-      await voteDiscussion({ DiscussionID: discussionID, Vote: vote });
+      const { id } = (await voteDiscussion({ DiscussionID: discussionID, Vote: vote })).data;
+      const updatedDiscussion: Discussion = {
+        ...target,
+        Votes: id,
+      };
+
+      onUpdateDiscussion(updatedDiscussion);
     } catch (error) {
-      // Revert on failure
-      onUpdateDiscussion(target);
       console.error(`Failed to vote:`, error);
     } finally {
       setVotingState(prev => ({ ...prev, [discussionID]: false }));
@@ -125,12 +130,15 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
     <div>
       <h2 className="text-2xl font-semibold mb-4">Discussions</h2>
 
-      <button
-        onClick={handleOpenModal}
-        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-      >
-        Create Discussion
-      </button>
+      {
+        user &&
+        <button
+          onClick={handleOpenModal}
+          className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
+        >
+          Create Discussion
+        </button>
+      }
 
       {discussions?.length === 0 ? (
         <p>No discussions yet. Be the first to start one!</p>
@@ -218,22 +226,39 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
                       </ul>
                     )}
 
-                    {/* Add Comment Input */}
-                    <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                      <input
-                        type="text"
-                        value={commentInput}
-                        onChange={(e) => setCommentInput(e.target.value)}
-                        placeholder="Write your comment..."
-                        className="border border-gray-300 px-3 py-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-200"
-                      />
-                      <button
-                        onClick={() => handleAddComment(discussion.ID)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
-                      >
-                        Submit
-                      </button>
-                    </div>
+                    {
+                      user ? (
+                        // Add Comment Input for Logged-In Users
+                        <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="text"
+                            value={commentInput}
+                            onChange={(e) => setCommentInput(e.target.value)}
+                            placeholder="Write your comment..."
+                            className="border border-gray-300 px-3 py-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-200"
+                          />
+                          <button
+                            onClick={() => handleAddComment(discussion.ID)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
+                          >
+                            Submit
+                          </button>
+                        </div>
+                      ) : (
+                        // Prompt for Unauthenticated Users
+                        <div className="mt-4">
+                          <p className="text-gray-700">
+                            <span className="font-medium">Login</span> to add a comment.
+                            <button
+                              onClick={handleLoginRedirect}
+                              className="ml-2 text-blue-600 hover:underline font-semibold"
+                            >
+                              Click here to login.
+                            </button>
+                          </p>
+                        </div>
+                      )
+                    }
                   </div>
                 )}
               </div>

@@ -17,7 +17,6 @@ import type {
     AddVotePayload,
     AddCommentPayload,
 } from '../types';
-import type { number } from 'framer-motion';
 
 // Auth
 export const signup = (data: SignupPayload) =>
@@ -111,7 +110,7 @@ export const updateDiscussion = (data: Discussion) =>
     axios.put<OkResponse>('/discussion', data);
 
 export const voteDiscussion = (data: AddVotePayload) =>
-    axios.post<OkResponse>('/discussion/vote', data);
+    axios.post<IdResponse>('/discussion/vote', data);
 
 export const commentDiscussion = (data: AddCommentPayload) =>
     axios.post<IdResponse>('/discussion/comment', data);
