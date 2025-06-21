@@ -69,7 +69,7 @@ func (r *RedisService) ExecuteCode(ctx context.Context, payload ExecutionPayload
 	if err != nil {
 		return err
 	}
-	return r.client.RPush(ctx, string(payload.Language), data).Err()
+	return r.client.RPush(ctx, "tasks_queue", data).Err()
 }
 
 // Set caches a key-value pair with an optional expiration time.
