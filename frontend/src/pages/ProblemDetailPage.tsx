@@ -105,8 +105,9 @@ const ProblemDetailPage: React.FC = () => {
           result.Results = [{
             ID: 1,
             Status: result.Status,
-            StdOut: "",
-            StdErr: "",
+            Input: "",
+            ExpectedOutput: "",
+            Output: "",
             RuntimeMS: 0,
             MemoryKB: 0,
           }]
@@ -171,7 +172,7 @@ const ProblemDetailPage: React.FC = () => {
   const handleCreateDiscussion = async (newDiscussion: Discussion) => {
     try {
       const response = await createDiscussion({ ...newDiscussion, ID: problem?.ID ? problem.ID : 0 });
-      setDiscussions([...discussions, { ...newDiscussion, ID: response.data.id }]);
+      setDiscussions(prev => prev ? [...prev, { ...newDiscussion, ID: response.data.id }] : [{ ...newDiscussion, ID: response.data.id },]);
     } catch (error) {
       console.error('Error creating discussion:', error);
     }

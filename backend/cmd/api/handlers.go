@@ -318,7 +318,7 @@ func (h *Handler) SubmitCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]int{"submission_id": id})
+	json.NewEncoder(w).Encode(map[string]int{"run_id": id})
 }
 
 func (h *Handler) GetSubmissionResult(w http.ResponseWriter, r *http.Request) {
