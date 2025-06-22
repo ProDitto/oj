@@ -42,6 +42,30 @@ const ProblemDetails: React.FC<ProblemDetailsProps> = ({ problem, code, setCode,
         </ul>
       </div>
 
+      <h2 className="font-semibold mt-4">Examples:</h2>
+      <div className="space-y-4 pb-4">
+        {problem?.Examples?.map((example, idx) => (
+          <div key={example.ID} className="p-4 bg-gray-50 rounded border border-gray-200">
+            <h3 className="font-semibold">Example {idx + 1}</h3>
+            <div className="mt-2">
+              <p><span className="font-medium">Input:</span></p>
+              <pre className="bg-white p-2 rounded border overflow-auto">{example.Input}</pre>
+            </div>
+            <div className="mt-2">
+              <p><span className="font-medium">Expected Output:</span></p>
+              <pre className="bg-white p-2 rounded border overflow-auto">{example.ExpectedOutput}</pre>
+            </div>
+            {example.Explanation && (
+              <div className="mt-2">
+                <p><span className="font-medium">Explanation:</span></p>
+                <pre className="bg-white p-2 rounded border overflow-auto">{example.Explanation}</pre>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+
       <div className="space-y-4">
         <LanguageSelector language={language} setLanguage={setLanguage} />
 

@@ -28,7 +28,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(AuthCookieName)
 		if err != nil || strings.TrimSpace(cookie.Value) == "" {
-			http.Error(w, "unauthorized: missing auth token", http.StatusUnauthorized)
+			// http.Error(w, "unauthorized: missing auth token", http.StatusUnauthorized)
+			http.Error(w, "Login required", http.StatusUnauthorized)
 			return
 		}
 

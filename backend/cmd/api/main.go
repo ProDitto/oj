@@ -65,16 +65,16 @@ func main() {
 		if er.ExecutionType == EXECUTION_RUN || er.ExecutionType == EXECUTION_SUBMIT {
 			if er.ExecutionType == EXECUTION_SUBMIT {
 				for i := range er.Results {
-					er.Results[i].Input = ""
-					er.Results[i].Output = ""
-					er.Results[i].ExpectedOutput = ""
+					er.Results[i].Input = "<hidden>"
+					er.Results[i].Output = "<hidden>"
+					er.Results[i].ExpectedOutput = "<hidden>"
 				}
 			}
 			err := srv.UpdateSubmission(ctx, &Submission{
 				ID:     er.SubmissionID,
 				Status: status,
 				// Status:  "accepted",
-				Message: "<Placeholder for message>",
+				Message: "",
 				Results: er.Results,
 			})
 			if err != nil {

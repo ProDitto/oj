@@ -48,6 +48,15 @@ func (s *serviceImpl) Register(ctx context.Context, username, email, password st
 	var role string
 	err = s.db.QueryRowContext(ctx, query, username, email, hashedPassword).Scan(&userID, &role)
 	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+			switch pqErr.Constraint {
+			case "users_username_key":
+				return 0, "", fmt.Errorf("username '%s' is already taken", username)
+			case "users_email_key":
+				return 0, "", fmt.Errorf("email '%s' is already registered", email)
+			}
+		}
 		return 0, "", fmt.Errorf("failed to register user: %w", err)
 	}
 
@@ -1261,8 +1270,10 @@ func (s *serviceImpl) GetDiscussionByID(ctx context.Context, discussionID int) (
 func (s *serviceImpl) GetDiscussionsByProblem(ctx context.Context, problemID int) ([]Discussion, error) {
 	// Step 1: Query for all discussions related to the given problem ID
 	const baseQuery = `
-        SELECT id, title, content, author_id, is_active
-        FROM discussions WHERE problem_id = $1 AND is_active = TRUE;
+        SELECT discussions.id, title, content, author_id, users.username, is_active
+        FROM discussions
+		JOIN users ON discussions.author_id=users.id
+		WHERE problem_id = $1 AND is_active = TRUE;
     `
 	ctx, cancel := context.WithTimeout(ctx, maxQueryTime)
 	defer cancel()
@@ -1276,7 +1287,7 @@ func (s *serviceImpl) GetDiscussionsByProblem(ctx context.Context, problemID int
 	var discussions []Discussion
 	for rows.Next() {
 		var d Discussion
-		err := rows.Scan(&d.ID, &d.Title, &d.Content, &d.AuthorID, &d.IsActive)
+		err := rows.Scan(&d.ID, &d.Title, &d.Content, &d.AuthorID, &d.AuthorUsername, &d.IsActive)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan discussion row: %w", err)
 		}
@@ -1291,7 +1302,9 @@ func (s *serviceImpl) GetDiscussionsByProblem(ctx context.Context, problemID int
 
 		// Step 3: Retrieve comments for each discussion
 		commentRows, err := s.db.QueryContext(ctx, `
-            SELECT content, author_id FROM discussion_comments WHERE discussion_id = $1 ORDER BY created_at ASC;
+            SELECT discussion_comments.id, content, author_id, users.username FROM discussion_comments
+			JOIN users ON discussion_comments.author_id=users.id
+			WHERE discussion_id = $1 ORDER BY discussion_comments.created_at ASC;
         `, d.ID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get comments for discussion %d: %w", d.ID, err)
@@ -1300,7 +1313,7 @@ func (s *serviceImpl) GetDiscussionsByProblem(ctx context.Context, problemID int
 
 		for commentRows.Next() {
 			var comment DiscussionComment
-			if err := commentRows.Scan(&comment.Content, &comment.AuthorID); err != nil {
+			if err := commentRows.Scan(&comment.ID, &comment.Content, &comment.AuthorID, &comment.AuthorUsername); err != nil {
 				return nil, fmt.Errorf("failed to scan comment row: %w", err)
 			}
 			d.Comments = append(d.Comments, comment)

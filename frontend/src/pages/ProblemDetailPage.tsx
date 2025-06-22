@@ -97,10 +97,23 @@ const ProblemDetailPage: React.FC = () => {
     currentRunId.current = runId;
     setRunning(true);
 
+    let attempts = 0;
+    const maxAttempts = 10;
+
     const intervalId = setInterval(async () => {
+      if (attempts >= maxAttempts) {
+        clearInterval(intervalId);
+        setRunning(false);
+        console.warn('Polling limit reached');
+        return;
+      }
+
+      attempts++;
+
       try {
         const response = await getSubmission(runId);
-        const result = response.data
+        const result = response.data;
+
         if (!result.Results) {
           result.Results = [{
             ID: 1,
@@ -110,21 +123,26 @@ const ProblemDetailPage: React.FC = () => {
             Output: "",
             RuntimeMS: 0,
             MemoryKB: 0,
-          }]
+          }];
         }
+
         if (result && result.Status !== 'pending') {
           clearInterval(intervalId);
           currentRunId.current = 0;
           setRunning(false);
-          // setOutput(result.Output || '');
           setSubmissionDetails(result);
         }
       } catch (error) {
+        toast("Maximum number of polling attempts reached. The result could not be retrieved.", {
+          type: 'error',
+          autoClose: 2000,
+          position: 'bottom-right',
+        })
         console.error('Error polling result:', error);
         clearInterval(intervalId);
         setRunning(false);
       }
-    }, 2000);
+    }, 3000);
   }, []);
 
   const handleRun = async () => {
@@ -142,8 +160,7 @@ const ProblemDetailPage: React.FC = () => {
       if (error instanceof AxiosError) {
         toast(error.response?.data || "unknown error", {
           type: 'error',
-          // duration: 5000,
-          delay: 5000,
+          autoClose: 2000,
           position: 'bottom-right',
         })
       }
@@ -163,6 +180,13 @@ const ProblemDetailPage: React.FC = () => {
       const res = await submitSolution(payload); // Assuming submitSolution returns same as runCode
       pollForResults(res.data.run_id);
     } catch (error) {
+      if (error instanceof AxiosError) {
+        toast(error.response?.data || "unknown error", {
+          type: 'error',
+          autoClose: 2000,
+          position: 'bottom-right',
+        })
+      }
       console.error('Error submitting solution:', error);
     } finally {
       setSubmitting(false);
@@ -174,6 +198,13 @@ const ProblemDetailPage: React.FC = () => {
       const response = await createDiscussion({ ...newDiscussion, ID: problem?.ID ? problem.ID : 0 });
       setDiscussions(prev => prev ? [...prev, { ...newDiscussion, ID: response.data.id }] : [{ ...newDiscussion, ID: response.data.id },]);
     } catch (error) {
+      if (error instanceof AxiosError) {
+        toast(error.response?.data || "unknown error", {
+          type: 'error',
+          autoClose: 2000,
+          position: 'bottom-right',
+        })
+      }
       console.error('Error creating discussion:', error);
     }
   };

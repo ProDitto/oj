@@ -3,6 +3,8 @@ import type { Discussion, DiscussionComment, Vote, AddCommentPayload } from '../
 import { voteDiscussion, commentDiscussion } from '../api/endpoints';
 import { useUser } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
+import { AxiosError } from 'axios';
+import { toast } from 'react-toastify';
 
 interface DiscussionsTabProps {
   discussions: Discussion[];
@@ -15,19 +17,20 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
   onCreateDiscussion,
   onUpdateDiscussion,
 }) => {
+  const { user } = useUser();
   const [isModalOpen, setModalOpen] = useState(false);
   const [newDiscussion, setNewDiscussion] = useState<Omit<Discussion, 'ID' | 'Votes' | 'Comments'>>({
     Title: '',
     Content: '',
     Tags: [],
-    AuthorID: 0,
+    AuthorID: user?.ID || 0,
+    AuthorUsername: user?.Username || "user",
   });
 
   const [commentInput, setCommentInput] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [votingState, setVotingState] = useState<Record<number, boolean>>({}); // Voting button loading state
+  const [votingState, setVotingState] = useState<Record<number, boolean>>({});
   const [activeDiscussionID, setActiveDiscussionID] = useState<number | null>(null);
-  const { user } = useUser();
   const navigate = useNavigate();
 
   const handleLoginRedirect = () => {
@@ -47,7 +50,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
   const handleOpenModal = () => setModalOpen(true);
   const handleCloseModal = () => {
     setModalOpen(false);
-    setNewDiscussion({ Title: '', Content: '', Tags: [], AuthorID: 0 });
+    setNewDiscussion({ Title: '', Content: '', Tags: [], AuthorID: 0, AuthorUsername: "user" });
     setErrorMessage('');
   };
 
@@ -59,7 +62,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
 
     const newDiscussionData: Discussion = {
       ...newDiscussion,
-      ID: Date.now(), // Backend should override
+      ID: Date.now(),
       Votes: 0,
       Comments: [],
     };
@@ -73,13 +76,9 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
     if (!trimmed) return;
 
     const target = discussions.find(d => d.ID === discussionID);
-    if (!target) return;
+    if (!target || !user) return;
 
     try {
-      if (!user) {
-        return
-      }
-
       const payload: AddCommentPayload = {
         DiscussionID: discussionID,
         Content: trimmed,
@@ -91,6 +90,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
         ID: response?.data?.id || Date.now(),
         Content: trimmed,
         AuthorID: user.ID,
+        AuthorUsername: user.Username
       };
 
       const updatedDiscussion: Discussion = {
@@ -101,7 +101,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
       onUpdateDiscussion(updatedDiscussion);
       setCommentInput('');
     } catch (err) {
-      console.log("Error adding a commment: ", err)
+      console.log("Error adding a comment: ", err)
     }
   };
 
@@ -120,6 +120,14 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
 
       onUpdateDiscussion(updatedDiscussion);
     } catch (error) {
+      if (error instanceof AxiosError) {
+        toast(error.response?.data || "unknown error", {
+          type: 'error',
+          autoClose: 2000,
+          position: 'bottom-right',
+        })
+      }
+
       console.error(`Failed to vote:`, error);
     } finally {
       setVotingState(prev => ({ ...prev, [discussionID]: false }));
@@ -167,7 +175,16 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
                     {discussion.Content}
                   </p>
 
-                  {/* Tags */}
+                  <div className="flex items-center gap-2 mt-3">
+                    <button
+                      title={discussion.AuthorUsername}
+                      className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-semibold hover:bg-blue-600"
+                    >
+                      {discussion.AuthorUsername.charAt(0).toUpperCase()}
+                    </button>
+                    <span className="text-sm text-gray-700">{discussion.AuthorUsername}</span>
+                  </div>
+
                   {discussion?.Tags?.length > 0 && (
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       {discussion?.Tags?.map((tag, index) => (
@@ -214,13 +231,19 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
                     {discussion?.Comments?.length === 0 ? (
                       <p className="text-sm text-gray-500 italic">No comments yet.</p>
                     ) : (
-                      <ul className="mt-2 space-y-2 text-sm text-gray-700">
+                      <ul className="mt-2 space-y-3 text-sm text-gray-700">
                         {discussion?.Comments?.map((comment) => (
-                          <li key={comment.ID}>
-                            <span className="font-medium text-gray-800">
-                              User {comment.AuthorID}:
-                            </span>{' '}
-                            {comment.Content}
+                          <li key={comment.ID} className="flex items-start gap-3">
+                            <div
+                              title={comment.AuthorUsername}
+                              className="w-8 h-8 bg-blue-400 text-white rounded-full flex items-center justify-center text-sm font-bold"
+                            >
+                              {comment.AuthorUsername.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-800">{comment.AuthorUsername}</p>
+                              <p className="text-sm text-gray-700">{comment.Content}</p>
+                            </div>
                           </li>
                         ))}
                       </ul>
@@ -228,24 +251,30 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
 
                     {
                       user ? (
-                        // Add Comment Input for Logged-In Users
-                        <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                          <input
-                            type="text"
-                            value={commentInput}
-                            onChange={(e) => setCommentInput(e.target.value)}
-                            placeholder="Write your comment..."
-                            className="border border-gray-300 px-3 py-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-200"
-                          />
-                          <button
-                            onClick={() => handleAddComment(discussion.ID)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
+                        <div className="mt-4 flex items-start gap-3">
+                          <div
+                            title={user.Username}
+                            className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-semibold"
                           >
-                            Submit
-                          </button>
+                            {user.Username.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 flex flex-col sm:flex-row gap-2">
+                            <input
+                              type="text"
+                              value={commentInput}
+                              onChange={(e) => setCommentInput(e.target.value)}
+                              placeholder="Write your comment..."
+                              className="border border-gray-300 px-3 py-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-200"
+                            />
+                            <button
+                              onClick={() => handleAddComment(discussion.ID)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
+                            >
+                              Submit
+                            </button>
+                          </div>
                         </div>
                       ) : (
-                        // Prompt for Unauthenticated Users
                         <div className="mt-4">
                           <p className="text-gray-700">
                             <span className="font-medium">Login</span> to add a comment.
@@ -264,7 +293,6 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({
               </div>
             );
           })}
-
         </div>
       )}
 

@@ -112,6 +112,7 @@ export interface DiscussionComment {
     ID: number
     Content: string;
     AuthorID: number;
+    AuthorUsername: string;
 }
 
 export interface Discussion {
@@ -120,6 +121,7 @@ export interface Discussion {
     Content: string;
     Tags: string[];
     AuthorID: number;
+    AuthorUsername: string;
     Votes: number;
     Comments: DiscussionComment[];
 }

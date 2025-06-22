@@ -6,6 +6,8 @@ import { signup, login } from '../api/endpoints';
 import type { SignupPayload, LoginPayload } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import { AxiosError } from 'axios';
+import { toast } from 'react-toastify';
 
 const AuthPage: React.FC = () => {
     const [isSignup, setIsSignup] = useState(false);
@@ -38,6 +40,13 @@ const AuthPage: React.FC = () => {
             }
             getCurrentUserProfile();
         } catch (err) {
+            if (err instanceof AxiosError) {
+                toast(err.response?.data || "unknown error", {
+                    type: 'error',
+                    autoClose: 2000,
+                    position: 'bottom-right',
+                })
+            }
             console.log("Error: ", err)
             // setServerError(err.response?.data?.message || 'Something went wrong.');
         }

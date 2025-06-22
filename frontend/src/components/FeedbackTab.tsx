@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { aiFeedback } from '../api/endpoints';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { AxiosError } from 'axios';
+import { toast } from 'react-toastify';
 
 interface FeedbackTabProps {
     problemID: number;
@@ -22,6 +24,14 @@ const FeedbackTab: React.FC<FeedbackTabProps> = ({ problemID, code, feedback, se
             const res = await aiFeedback(problemID, code);
             setFeedback(res.data.Feedback || 'No feedback provided.');
         } catch (err) {
+            if (err instanceof AxiosError) {
+                toast(err.response?.data || "unknown error", {
+                    type: 'error',
+                    autoClose: 2000,
+                    position: 'bottom-right',
+                })
+            }
+
             console.error('Error fetching feedback:', err);
             setError('Unable to fetch feedback at this time. Please try again later.');
         } finally {

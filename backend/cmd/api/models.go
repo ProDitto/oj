@@ -12,13 +12,13 @@ type ExecutionType string
 type Vote int
 
 type User struct {
-	ID             int
-	Username       string
-	HashedPassword string
-	Email          string
-	Role           UserRole
-	Rating         int
-	SolvedProblems []ProblemInfo
+	ID             int           `json:"ID,omitempty"`
+	Username       string        `json:"Username,omitempty"`
+	HashedPassword string        `json:"HashedPassword,omitempty"`
+	Email          string        `json:"Email,omitempty"`
+	Role           UserRole      `json:"Role,omitempty"`
+	Rating         int           `json:"Rating,omitempty"`
+	SolvedProblems []ProblemInfo `json:"SolvedProblems,omitempty"`
 }
 
 type ProblemInfo struct {
@@ -51,22 +51,22 @@ type Limits struct {
 }
 
 type ProblemDetail struct {
-	ID               int
-	Title            string
-	Description      string
-	Constraints      []string
-	Slug             string
-	Tags             []string
-	Difficulty       Difficulty
-	AuthorID         int
-	Status           ProblemStatus
-	SolutionLanguage Language
-	SolutionCode     string
-	Explanation      string
-	TestCases        []TestCase
-	Examples         []ProblemExample
-	Limits           []Limits
-	FailureReason    *string // in case failed to validate
+	ID               int              `json:"ID,omitempty"`
+	Title            string           `json:"Title,omitempty"`
+	Description      string           `json:"Description,omitempty"`
+	Constraints      []string         `json:"Constraints,omitempty"`
+	Slug             string           `json:"Slug,omitempty"`
+	Tags             []string         `json:"Tags,omitempty"`
+	Difficulty       Difficulty       `json:"Difficulty,omitempty"`
+	AuthorID         int              `json:"AuthorId,omitempty"`
+	Status           ProblemStatus    `json:"Status,omitempty"`
+	SolutionLanguage Language         `json:"SolutionLanguage,omitempty"`
+	SolutionCode     string           `json:"SolutionCode,omitempty"`
+	Explanation      string           `json:"Explanation,omitempty"`
+	TestCases        []TestCase       `json:"TestCases,omitempty"`
+	Examples         []ProblemExample `json:"Examples,omitempty"`
+	Limits           []Limits         `json:"Limits,omitempty"`
+	FailureReason    *string          `json:"FailureReason,omitempty"`
 }
 
 type Submission struct {
@@ -135,20 +135,22 @@ type ExecutionResponse struct {
 }
 
 type Discussion struct {
-	ID       int
-	Title    string
-	Content  string
-	Tags     []string
-	AuthorID int
-	IsActive bool
-	Votes    int // Sum of all votes
-	Comments []DiscussionComment
+	ID             int
+	Title          string
+	Content        string
+	Tags           []string
+	AuthorID       int
+	AuthorUsername string
+	IsActive       bool
+	Votes          int // Sum of all votes
+	Comments       []DiscussionComment
 }
 
 type DiscussionComment struct {
-	ID       int
-	Content  string
-	AuthorID int
+	ID             int
+	Content        string
+	AuthorID       int
+	AuthorUsername string
 }
 
 type SignupPayload struct {

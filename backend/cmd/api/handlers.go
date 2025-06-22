@@ -154,7 +154,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	userId, role, err := h.service.Login(r.Context(), payload.Username, payload.Password)
 	if err != nil {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
